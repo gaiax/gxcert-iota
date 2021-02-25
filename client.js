@@ -42,6 +42,12 @@ class CertClient {
     let time = date.getTime() / 1000;
     return time.toString() + ":" + ipfsHash;
   }
+  idPubKeyObject(json) {
+    if (!json.pubkey) {
+      return false;
+    }
+    return true;
+  }
   isCertObject(json) {
     return true;
   }
@@ -54,6 +60,19 @@ class CertClient {
     const key = cryptico.publicKeyFromString(pubKey);
     return key.verifyString(text, signature);
   }
+  async getBundles(address) {
+    const transactions = await this.iota.findTransactionObjects({ addresses: [this.address] });
+    const hashes = transactions.map(transaction => {
+      return transaction.hash;
+    });
+    let bundles = [];
+    for (const hash of hashes) {
+      const bundle = await this.iota.getBundle(hash);
+      const json = JSON.parse(Extract.extractJson(bundle));
+      bundles.push(json);
+    }
+    return bundles;
+  }
   async sendTransaction(messageObject, to) {
     const messageString = JSON.stringify(messageObject);
     const messageInTrytes = Converter.asciiToTrytes(messageString);
@@ -64,8 +83,8 @@ class CertClient {
         message: messageInTrytes,
       }
     ]
-    const trytes = await iota.prepareTransfers(seed, transfers);
-    const bundle = iota.sendTrytes(trytes, depth, minimumWeightMagnitude);
+    const trytes = await this.iota.prepareTransfers(this.seed, transfers);
+    const bundle = await this.iota.sendTrytes(trytes, depth, minimumWeightMagnitude);
     const hash = bundle[0].hash;
     return hash;
   }

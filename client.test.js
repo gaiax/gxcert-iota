@@ -48,3 +48,15 @@ test("certificate text", () => {
   const text = client.certificateText("abcd", new Date());
   expect(text.endsWith("abcd") && text.length > 4).toEqual(true);
 });
+
+test("post and get bundle", async () => {
+  const passphrase = generateRandomString(32);
+  const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
+  await client.init();
+  await client.sendTransaction({
+    hello: "world"
+  }, client.address);
+  const bundles = await client.getBundles(client.address);
+  expect(bundles.length).toEqual(1);
+  expect(bundles[0].hello).toEqual("world");
+});
