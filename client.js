@@ -38,6 +38,10 @@ class CertClient {
       "pubkey": pubKey
     }, this.address);
   }
+  certificateText(ipfsHash, to) {
+    let time = (new Date()).getTime() / 1000;
+    return time.toString() + ":" + ipfsHash;
+  }
   isCertObject(json) {
     return true;
   }
