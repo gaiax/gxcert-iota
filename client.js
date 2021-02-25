@@ -49,6 +49,9 @@ class CertClient {
     return true;
   }
   isCertObject(json) {
+    if (!json.ipfsHash || !json.time || !json.sig) {
+      return false;
+    }
     return true;
   }
   sign(text) {

@@ -72,3 +72,30 @@ test("is pubkey json", () => {
   });
   expect(isPubKey).toEqual(false);
 });
+
+test("is certificate json", () => {
+  const passphrase = generateRandomString(32);
+  const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
+  let isCert = client.isCertObject({
+    ipfsHash: "A",
+    time: (new Date()).getTime() / 1000,
+    sig: "sig"
+  });
+  expect(isCert).toEqual(true);
+  isCert = client.isCertObject({
+    time: (new Date()).getTime() / 1000,
+    sig: "sig"
+  });
+  expect(isCert).toEqual(false);
+  isCert = client.isCertObject({
+    ipfsHash: "A",
+    sig: "sig"
+  });
+  expect(isCert).toEqual(false);
+  isCert = client.isCertObject({
+    ipfsHash: "A",
+    time: (new Date()).getTime() / 1000,
+  });
+  expect(isCert).toEqual(false);
+
+});
