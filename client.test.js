@@ -58,7 +58,7 @@ test("post and get bundle", async () => {
   }, client.address);
   const bundles = await client.getBundles(client.address);
   expect(bundles.length).toEqual(2);
-  expect(bundles[0].hello).toEqual("world");
+  expect(bundles[1].hello).toEqual("world");
 });
 
 test("is pubkey json", () => {

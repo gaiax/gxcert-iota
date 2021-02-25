@@ -78,7 +78,7 @@ class CertClient {
     return key.verifyString(text, signature);
   }
   async getBundles(address) {
-    const transactions = await this.iota.findTransactionObjects({ addresses: [this.address] });
+    const transactions = await this.iota.findTransactionObjects({ addresses: [address] });
     const hashes = transactions.map(transaction => {
       return transaction.hash;
     });
