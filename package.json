@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "client.js",
+  "private": true,
   "scripts": {
     "test": "jest"
   },
