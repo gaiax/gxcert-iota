@@ -13,9 +13,9 @@ test("get first address by cert client", async() => {
   const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
   await clientA.init();
   await clientB.init();
-  const addressA = await clientA.getFirstAddress();
-  const addressB = await clientB.getFirstAddress();
-  const addressA2 = await clientA.getFirstAddress();
+  const addressA = clientA.address;
+  const addressB = clientB.address;
+  const addressA2 = clientA.address;
   expect(addressA).toEqual(addressA2);
   expect(addressA).not.toEqual(addressB);
 });
@@ -24,6 +24,6 @@ test("verify address", async() => {
   const passphrase = generateRandomString(32);
   const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
   await client.init();
-  const verified = await client.verifyAddress(await client.getFirstAddress(client.seed));
+  const verified = await client.verifyAddress(client.address);
   expect(verified).toEqual(true);
 });

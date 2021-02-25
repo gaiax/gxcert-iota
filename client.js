@@ -26,8 +26,7 @@ class CertClient {
     return (await this.iota.getNewAddress(seed, { index: 0, securityLevel: 2, total: 1 }))[0];
   }
   async verifyAddress(address) {
-    const _address = await this.getFirstAddress(this.seed);
-    if (address !== _address) {
+    if (this.address !== address) {
       return false;
     }
     return true;
