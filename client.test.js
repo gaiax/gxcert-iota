@@ -27,3 +27,18 @@ test("verify address", async() => {
   const verified = await client.verifyAddress(client.address);
   expect(verified).toEqual(true);
 });
+
+test("sign and verify", async() => {
+  const passphraseA = generateRandomString(32);
+  const passphraseB = generateRandomString(32);
+  const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
+  const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
+  await clientA.init();
+  await clientB.init();
+  const signature = clientA.sign(clientB.rsaKeyPair.pubKey);
+  let verified = clientB.verify(clientB.rsaKeyPair.pubKey, signature, clientA.rsaKeyPair.pubKey);
+  expect(verified).toEqual(true);
+  verified = clientB.verify("hello", signature, clientA.rsaKeyPair.pubKey);
+  expect(verified).toEqual(false);
+ 
+});
