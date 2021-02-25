@@ -8,9 +8,9 @@ const depth = 3;
 const minimumWeightMagnitude = 9;
 
 class CertClient {
-  constructor(uid) {
+  constructor(provider, uid) {
     this.iota = Iota.composeAPI({
-      provider: "https://nodes.devnet.iota.org"
+      provider
     });
     this.rsaKeyPair = getKeyPair(uid);
     this.seed = getSeed(uid);
@@ -68,8 +68,4 @@ class CertClient {
   }
 }
 
-(async () => {
-  const client = new CertClient("AOBFZFANUZDXOQKQJPNXVHCBTCIIILAIAZLDYU9TLACKYWNTHUBDYSAHXEBJDVFRCJLVNGMONGMSCLADM");
-  await client.init();
-  await client.getCertificates();
-})();
+module.exports = CertClient;
