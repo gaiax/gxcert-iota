@@ -3,6 +3,7 @@ const Extract = require("@iota/extract-json");
 const Converter = require("@iota/converter");
 const { getSeed } = require("./seed");
 const { getKeyPair } = require("./rsa");
+const cryptico = require("cryptico");
 
 const depth = 3;
 const minimumWeightMagnitude = 9;
@@ -30,6 +31,12 @@ class CertClient {
       return false;
     }
     return true;
+  }
+  async registerPubKey() {
+    const pubKey = this.rsaKeyPair.pubKey;
+    return await this.sendTransaction({
+      "pubkey": pubKey
+    }, this.address);
   }
   isCertObject(json) {
     return true;
