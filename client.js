@@ -122,9 +122,6 @@ class CertClient {
     }
   }
   async getCertificates(address) {
-    if (!address) {
-      address = this.address;
-    }
     const bundles = await this.getBundles(address);
     const that = this;
     const certificates = bundles.filter(bundle => {
