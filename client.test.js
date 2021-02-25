@@ -135,6 +135,7 @@ test("issue certificate", async () => {
   expect(certificates[0].time).not.toEqual(null);
   expect(certificates[0].time).not.toEqual(undefined);
   expect(certificates[0].sig.length).toEqual(256);
+  expect(certificates[0].by).toEqual(clientA.address);
 });
 
 test("register and get pubkey", async () => {
