@@ -40,5 +40,11 @@ test("sign and verify", async() => {
   expect(verified).toEqual(true);
   verified = clientB.verify("hello", signature, clientA.rsaKeyPair.pubKey);
   expect(verified).toEqual(false);
- 
+});
+
+test("certificate text", () => {
+  const passphrase = generateRandomString(32);
+  const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
+  const text = client.certificateText("abcd", new Date());
+  expect(text.endsWith("abcd") && text.length > 4).toEqual(true);
 });
