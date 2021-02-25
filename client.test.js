@@ -126,3 +126,12 @@ test("issue certificate", async () => {
   expect(certificates[0].time).not.toEqual(undefined);
   expect(certificates[0].sig.length).toEqual(256);
 });
+
+test("register and get pubkey", async () => {
+  const passphrase = generateRandomString(32);
+  const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
+  await client.init();
+  await client.registerPubKey();
+  const pubkey = await client.getPubKeyOf(client.address);
+  expect(pubkey).toEqual(client.rsaKeyPair.pubKey);
+});
