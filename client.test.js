@@ -97,5 +97,15 @@ test("is certificate json", () => {
     time: (new Date()).getTime() / 1000,
   });
   expect(isCert).toEqual(false);
+});
 
+test("create certificate", () => {
+  const passphraseA = generateRandomString(32);
+  const passphraseB = generateRandomString(32);
+  const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
+  const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
+  const ipfsHash = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
+  const certificate = clientA.createCertificateObject(ipfsHash);
+  expect(certificate.ipfsHash).toEqual(ipfsHash);
+  expect(certificate.sig.length).toEqual(256);
 });

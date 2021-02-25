@@ -91,7 +91,16 @@ class CertClient {
     const hash = bundle[0].hash;
     return hash;
   }
-  async createCertificate(ipfsHash, to) {
+  createCertificateObject(ipfsHash) {
+    const now = new Date();
+    const time = now.getTime() / 1000;
+    const text = this.certificateText(ipfsHash, now);
+    const sig = this.sign(text);
+    return {
+      ipfsHash,
+      time,
+      sig
+    }
   }
   async getCertificates() {
     const transactions = await this.iota.findTransactionObjects({ addresses: [this.address] });
