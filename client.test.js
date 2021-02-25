@@ -57,7 +57,7 @@ test("post and get bundle", async () => {
     hello: "world"
   }, client.address);
   const bundles = await client.getBundles(client.address);
-  expect(bundles.length).toEqual(1);
+  expect(bundles.length).toEqual(2);
   expect(bundles[0].hello).toEqual("world");
 });
 

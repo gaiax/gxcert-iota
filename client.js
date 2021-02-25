@@ -18,6 +18,10 @@ class CertClient {
   }
   async init() {
     this.address = await this.getFirstAddress();
+    const bundles = await this.getBundles(this.address);
+    if (bundles.length === 0) {
+      await this.registerPubKey();
+    }
     console.log(this.address);
   }
   async getFirstAddress(seed) {
