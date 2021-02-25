@@ -41,6 +41,15 @@ class CertClient {
   isCertObject(json) {
     return true;
   }
+  sign(text) {
+    const privKey = this.rsaKeyPair.privKey;
+    const signature = privKey.signString(text, "sha256");
+    return signature;
+  }
+  verify(text, signature, pubKey) {
+    const key = cryptico.publicKeyFromString(pubKey);
+    return key.verifyString(text, signature);
+  }
   async sendTransaction(messageObject, to) {
     const messageString = JSON.stringify(messageObject);
     const messageInTrytes = Converter.asciiToTrytes(messageString);
