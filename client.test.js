@@ -99,7 +99,7 @@ test("is certificate json", () => {
   expect(isCert).toEqual(false);
 });
 
-test("create certificate", () => {
+test("create certificate object", () => {
   const passphraseA = generateRandomString(32);
   const passphraseB = generateRandomString(32);
   const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
@@ -108,4 +108,21 @@ test("create certificate", () => {
   const certificate = clientA.createCertificateObject(ipfsHash);
   expect(certificate.ipfsHash).toEqual(ipfsHash);
   expect(certificate.sig.length).toEqual(256);
+});
+
+test("issue certificate", async () => {
+  const passphraseA = generateRandomString(32);
+  const passphraseB = generateRandomString(32);
+  const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
+  const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
+  await clientA.init();
+  await clientB.init();
+  const ipfsHash = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
+  const certificate = clientA.createCertificateObject(ipfsHash);
+  await clientA.issueCertificate(certificate, clientB.address);
+  const certificates = await clientB.getCertificates(clientB.address);
+  expect(certificates[0].ipfsHash).toEqual(ipfsHash);
+  expect(certificates[0].time).not.toEqual(null);
+  expect(certificates[0].time).not.toEqual(undefined);
+  expect(certificates[0].sig.length).toEqual(256);
 });

@@ -39,7 +39,7 @@ class CertClient {
     }, this.address);
   }
   certificateText(ipfsHash, date) {
-    let time = date.getTime() / 1000;
+    let time = Math.floor(date.getTime() / 1000);
     return time.toString() + ":" + ipfsHash;
   }
   isPubKeyObject(json) {
@@ -91,9 +91,12 @@ class CertClient {
     const hash = bundle[0].hash;
     return hash;
   }
+  async issueCertificate(certObject, address) {
+    return await this.sendTransaction(certObject, address);
+  }
   createCertificateObject(ipfsHash) {
     const now = new Date();
-    const time = now.getTime() / 1000;
+    const time = Math.floor(now.getTime() / 1000);
     const text = this.certificateText(ipfsHash, now);
     const sig = this.sign(text);
     return {
@@ -102,19 +105,13 @@ class CertClient {
       sig
     }
   }
-  async getCertificates() {
-    const transactions = await this.iota.findTransactionObjects({ addresses: [this.address] });
-    const hashes = transactions.map(transaction => {
-      return transaction.hash;
+  async getCertificates(address) {
+    const bundles = await this.getBundles(address);
+    const that = this;
+    const certificates = bundles.filter(bundle => {
+      return that.isCertObject(bundle);
     });
-    const certificates = [];
-    for (const hash of hashes) {
-      const bundle = await this.iota.getBundle(hash);
-      const json = JSON.parse(Extract.extractJson(bundle));
-      if (this.isCertObject(json)) {
-        certificates.push(json);
-      }
-    }
+    return certificates;
   }
 }
 
