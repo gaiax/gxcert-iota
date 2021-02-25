@@ -1,13 +1,16 @@
 const Iota = require("@iota/core");
 const Extract = require("@iota/extract-json");
 const Converter = require("@iota/converter");
+const { getSeed } = require("./seed");
+const { getKeyPair } = require("./rsa");
 
 class CertClient {
-  constructor(seed) {
+  constructor(uid) {
     this.iota = Iota.composeAPI({
       provider: "https://nodes.devnet.iota.org"
     });
-    this.seed = seed;
+    this.rsaKeyPair = getKeyPair(uid);
+    this.seed = getSeed(uid);
   }
   async init() {
     this.address = await this.getFirstAddress();
@@ -37,9 +40,10 @@ class CertClient {
     const messageString = JSON.stringify(message);
     const messageInTrytes = Converter.asciiToTrytes(message);
     const transfers = [
-      value: 0,
-      address: to,
-
+      {
+        value: 0,
+        address: to,
+      }
     ];
   }
   async getCertificates() {
