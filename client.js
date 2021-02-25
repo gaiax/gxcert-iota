@@ -42,7 +42,7 @@ class CertClient {
     let time = date.getTime() / 1000;
     return time.toString() + ":" + ipfsHash;
   }
-  idPubKeyObject(json) {
+  isPubKeyObject(json) {
     if (!json.pubkey) {
       return false;
     }

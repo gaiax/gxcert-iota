@@ -60,3 +60,15 @@ test("post and get bundle", async () => {
   expect(bundles.length).toEqual(1);
   expect(bundles[0].hello).toEqual("world");
 });
+
+test("is pubkey json", () => {
+  const passphrase = generateRandomString(32);
+  const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
+  let isPubKey = client.isPubKeyObject({
+    pubkey: "helloworld"
+  });
+  expect(isPubKey).toEqual(true);
+  isPubKey = client.isPubKeyObject({
+  });
+  expect(isPubKey).toEqual(false);
+});
