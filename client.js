@@ -4,6 +4,9 @@ const Converter = require("@iota/converter");
 const { getSeed } = require("./seed");
 const { getKeyPair } = require("./rsa");
 
+const depth = 3;
+const minimumWeightMagnitude = 9;
+
 class CertClient {
   constructor(uid) {
     this.iota = Iota.composeAPI({
@@ -31,6 +34,21 @@ class CertClient {
   }
   isCertObject(json) {
     return true;
+  }
+  async sendTransaction(messageObject, to) {
+    const messageString = JSON.stringify(messageObject);
+    const messageInTrytes = Converter.asciiToTrytes(messageString);
+    const transfers = [
+      {
+        value: 0,
+        address: to,
+        message: messageInTrytes,
+      }
+    ]
+    const trytes = await iota.prepareTransfers(seed, transfers);
+    const bundle = iota.sendTrytes(trytes, depth, minimumWeightMagnitude);
+    const hash = bundle[0].hash;
+    return hash;
   }
   async createCertificate(from, to, ipfsHash) {
     const message = {
