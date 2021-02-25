@@ -77,24 +77,34 @@ test("is certificate json", () => {
   const passphrase = generateRandomString(32);
   const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
   let isCert = client.isCertObject({
-    ipfsHash: "A",
+    ipfs: "A",
     time: (new Date()).getTime() / 1000,
-    sig: "sig"
+    sig: "sig",
+    by: "by",
   });
   expect(isCert).toEqual(true);
   isCert = client.isCertObject({
     time: (new Date()).getTime() / 1000,
-    sig: "sig"
+    sig: "sig",
+    by: "by",
   });
   expect(isCert).toEqual(false);
   isCert = client.isCertObject({
-    ipfsHash: "A",
-    sig: "sig"
+    ipfs: "A",
+    sig: "sig",
+    by: "by",
   });
   expect(isCert).toEqual(false);
   isCert = client.isCertObject({
-    ipfsHash: "A",
+    ipfs: "A",
     time: (new Date()).getTime() / 1000,
+    by: "by",
+  });
+  expect(isCert).toEqual(false);
+  isCert = client.isCertObject({
+    ipfs: "A",
+    time: (new Date()).getTime() / 1000,
+    sig: "sig",
   });
   expect(isCert).toEqual(false);
 });
@@ -104,9 +114,9 @@ test("create certificate object", () => {
   const passphraseB = generateRandomString(32);
   const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
   const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
-  const ipfsHash = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
-  const certificate = clientA.createCertificateObject(ipfsHash);
-  expect(certificate.ipfsHash).toEqual(ipfsHash);
+  const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
+  const certificate = clientA.createCertificateObject(ipfs);
+  expect(certificate.ipfs).toEqual(ipfs);
   expect(certificate.sig.length).toEqual(256);
 });
 
@@ -117,11 +127,11 @@ test("issue certificate", async () => {
   const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
   await clientA.init();
   await clientB.init();
-  const ipfsHash = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
-  const certificate = clientA.createCertificateObject(ipfsHash);
+  const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
+  const certificate = clientA.createCertificateObject(ipfs);
   await clientA.issueCertificate(certificate, clientB.address);
   const certificates = await clientB.getCertificates(clientB.address);
-  expect(certificates[0].ipfsHash).toEqual(ipfsHash);
+  expect(certificates[0].ipfs).toEqual(ipfs);
   expect(certificates[0].time).not.toEqual(null);
   expect(certificates[0].time).not.toEqual(undefined);
   expect(certificates[0].sig.length).toEqual(256);

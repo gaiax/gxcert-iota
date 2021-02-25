@@ -48,9 +48,9 @@ class CertClient {
     }
     return bundles[0].pubkey;
   }
-  certificateText(ipfsHash, date) {
+  certificateText(ipfs, date) {
     let time = Math.floor(date.getTime() / 1000);
-    return time.toString() + ":" + ipfsHash;
+    return time.toString() + ":" + ipfs;
   }
   isPubKeyObject(json) {
     if (!json.pubkey) {
@@ -59,7 +59,7 @@ class CertClient {
     return true;
   }
   isCertObject(json) {
-    if (!json.ipfsHash || !json.time || !json.sig) {
+    if (!json.ipfs || !json.time || !json.sig || !json.by) {
       return false;
     }
     return true;
@@ -104,15 +104,17 @@ class CertClient {
   async issueCertificate(certObject, address) {
     return await this.sendTransaction(certObject, address);
   }
-  createCertificateObject(ipfsHash) {
+  createCertificateObject(ipfs) {
     const now = new Date();
     const time = Math.floor(now.getTime() / 1000);
-    const text = this.certificateText(ipfsHash, now);
+    const text = this.certificateText(ipfs, now);
     const sig = this.sign(text);
+    const by = this.address;
     return {
-      ipfsHash,
+      ipfs,
       time,
-      sig
+      sig,
+      by,
     }
   }
   async getCertificates(address) {
