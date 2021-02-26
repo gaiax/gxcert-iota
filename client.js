@@ -53,7 +53,10 @@ class CertClient {
     return bundles[0].pubkey;
   }
   certificateText(ipfs, date) {
-    let time = Math.floor(date.getTime() / 1000);
+    let time = date;
+    if (date instanceof Date) {
+      time = Math.floor(date.getTime() / 1000);
+    }
     return time.toString() + ":" + ipfs;
   }
   isPubKeyObject(json) {
@@ -130,7 +133,18 @@ class CertClient {
     const certificates = bundles.filter(bundle => {
       return that.isCertObject(bundle);
     });
-    return certificates;
+    const validCertificates = [];
+    for (const certificate of certificates) {
+      const by = certificate.by;
+      const time = certificate.time;
+      const sig = certificate.sig;
+      const pubKey = await this.getPubKeyOf(by);
+      const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
+      if (verified) {
+        validCertificates.push(certificate);
+      }
+    }
+    return validCertificates;
   }
 }
 
