@@ -124,6 +124,9 @@ class CertClient {
       by,
     }
   }
+  async getCertificate(address, index) {
+    return await this.getCertificates(address)[index];
+  }
   async getCertificates(address) {
     if (!address) {
       address = this.address;
