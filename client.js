@@ -18,8 +18,9 @@ class CertClient {
   }
   async init() {
     this.address = await this.getFirstAddress();
-    const bundles = await this.getBundles(this.address);
-    if (bundles.length === 0) {
+    try {
+      const pubkey = await this.getPubKeyOf(this.address);
+    } catch(err) {
       await this.registerPubKey();
     }
     console.log(this.address);
@@ -44,13 +45,12 @@ class CertClient {
   }
   async getPubKeyOf(address) {
     const bundles = await this.getBundles(address);
-    if (bundles.length === 0) {
-      throw new Error("public key is not registered");
+    for (const bundle of bundles) {
+      if (this.isPubKeyObject(bundle)) {
+        return bundle.pubkey;
+      }
     }
-    if (!this.isPubKeyObject(bundles[0])) {
-      throw new Error("public key is invalid");
-    }
-    return bundles[0].pubkey;
+    throw new Error("public key is not found.");
   }
   certificateText(ipfs, date) {
     let time = date;
