@@ -133,7 +133,24 @@ class CertClient {
     }
   }
   async getCertificate(address, index) {
-    return await this.getCertificates(address)[index];
+    if (!address) {
+      address = this.address;
+    }
+    const bundles = await this.getBundles(address);
+    const that = this;
+    const certificates = bundles.filter(bundle => {
+      return that.isCertObject(bundle);
+    });
+    const certificate = certificates[index];
+    const by = certificate.by;
+    const time = certificate.time;
+    const sig = certificate.sig;
+    const pubKey = await this.getPubKeyOf(by);
+    const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
+    if (verified) {
+      return certificate;
+    }
+    throw new Error("Certificate is invalid");
   }
   async getCertificates(address) {
     if (!address) {
