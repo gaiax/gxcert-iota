@@ -74,8 +74,7 @@ test("is pubkey json", () => {
     pubkey: "helloworld"
   });
   expect(isPubKey).toEqual(true);
-  isPubKey = client.isPubKeyObject({
-  });
+  isPubKey = client.isPubKeyObject({});
   expect(isPubKey).toEqual(false);
 });
 
@@ -123,7 +122,7 @@ test("create certificate object", () => {
   const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
   const certificate = clientA.createCertificateObject(ipfs);
   expect(certificate.ipfs).toEqual(ipfs);
-  expect(certificate.sig.length).toEqual(256);
+  expect(certificate.sig.length > 0).toEqual(true);
 });
 
 test("issue certificate", async () => {
@@ -140,15 +139,39 @@ test("issue certificate", async () => {
   expect(certificates[0].ipfs).toEqual(ipfs);
   expect(certificates[0].time).not.toEqual(null);
   expect(certificates[0].time).not.toEqual(undefined);
-  expect(certificates[0].sig.length).toEqual(256);
+  expect(certificates[0].sig.length > 0).toEqual(true);
   expect(certificates[0].by).toEqual(clientA.address);
 });
 
-test("register and get pubkey", async () => {
-  const passphrase = generateRandomString(32);
-  const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
-  await client.init();
-  await client.registerPubKey();
-  const pubkey = await client.getPubKeyOf(client.address);
-  expect(pubkey).toEqual(client.rsaKeyPair.pubKey);
+test("issue invalid certificate, and verify", async () => {
+  const passphraseA = generateRandomString(32);
+  const passphraseB = generateRandomString(32);
+  const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
+  const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
+  await clientA.init();
+  await clientB.init();
+  const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
+  const certificate = clientB.createCertificateObject(ipfs);
+  certificate.by = clientA.address;
+  await clientA.issueCertificate(certificate, clientB.address);
+  const certificates = await clientB.getCertificates(clientB.address);
+  expect(certificates.length).toEqual(0);
 });
+
+test("register and get pubkey", async () => {
+  const passphraseA = generateRandomString(32);
+  const passphraseB = generateRandomString(32);
+  const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
+  const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
+  await clientA.init();
+  await clientB.init();
+  let pubkey = await clientA.getPubKeyOf(clientA.address);
+  expect(pubkey).toEqual(clientA.rsaKeyPair.pubKey);
+  const dummyPubKey = clientB.rsaKeyPair.pubKey;
+  await clientB.sendTransaction({
+    "pubkey": dummyPubKey
+  }, clientA.address);
+  pubkey = await clientA.getPubKeyOf(clientA.address);
+  expect(pubkey).toEqual(clientA.rsaKeyPair.pubKey);
+});
+
