@@ -19,7 +19,7 @@ class CertClient {
   async init() {
     this.address = await this.getFirstAddress();
     try {
-      const pubkey = await this.getPubKeyOf(this.address);
+      await this.getPubKeyAndNameOf(this.address);
     } catch(err) {
       await this.registerPubKey();
     }
@@ -43,14 +43,35 @@ class CertClient {
       "pubkey": pubKey
     }, this.address);
   }
-  async getPubKeyOf(address) {
+  async registerName(name) {
+    if (name.length > 16) {
+      throw new Error("The name must be 16 characters or less.");
+    }
+    return await this.sendTransaction({
+      "name": name
+    }, this.address);
+  }
+  async getPubKeyAndNameOf(address) {
     const bundles = await this.getBundles(address);
+    let pubkey = null;
+    let name = null;
     for (const bundle of bundles) {
       if (this.isPubKeyObject(bundle)) {
-        return bundle.pubkey;
+        pubkey = bundle.pubkey;
       }
     }
-    throw new Error("public key is not found.");
+    if (pubkey === null) {
+      throw new Error("public key is not found.");
+    }
+    for (const bundle of bundles.reverse()) {
+      if (this.isNameObject(bundle)) {
+        name = bundle.name;
+      }
+    }
+    return {
+      pubkey,
+      name,
+    }
   }
   certificateText(ipfs, date) {
     let time = date;
@@ -61,6 +82,12 @@ class CertClient {
   }
   isPubKeyObject(json) {
     if (!json.pubkey) {
+      return false;
+    }
+    return true;
+  }
+  isNameObject(json) {
+    if (!json.name) {
       return false;
     }
     return true;
@@ -145,7 +172,7 @@ class CertClient {
     const by = certificate.by;
     const time = certificate.time;
     const sig = certificate.sig;
-    const pubKey = await this.getPubKeyOf(by);
+    const pubKey = (await this.getPubKeyAndNameOf(by)).pubkey;
     const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
     if (verified) {
       return certificate;
@@ -166,7 +193,7 @@ class CertClient {
       const by = certificate.by;
       const time = certificate.time;
       const sig = certificate.sig;
-      const pubKey = await this.getPubKeyOf(by);
+      const pubKey = (await this.getPubKeyAndNameOf(by)).pubkey;
       const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
       if (verified) {
         validCertificates.push(certificate);
