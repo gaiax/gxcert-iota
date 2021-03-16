@@ -172,7 +172,8 @@ class CertClient {
     const by = certificate.by;
     const time = certificate.time;
     const sig = certificate.sig;
-    const pubKey = (await this.getPubKeyAndNameOf(by)).pubkey;
+    const info = await this.getPubKeyAndNameOf(by);
+    const pubKey = info.pubkey;
     const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
     if (verified) {
       return certificate;
@@ -193,7 +194,10 @@ class CertClient {
       const by = certificate.by;
       const time = certificate.time;
       const sig = certificate.sig;
-      const pubKey = (await this.getPubKeyAndNameOf(by)).pubkey;
+      const info = await this.getPubKeyAndNameOf(by);
+      const pubKey = info.pubkey;
+      const name = info.name;
+      certificate.name = name;
       const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
       if (verified) {
         validCertificates.push(certificate);
