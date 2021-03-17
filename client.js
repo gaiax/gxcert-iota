@@ -174,6 +174,8 @@ class CertClient {
     const sig = certificate.sig;
     const info = await this.getPubKeyAndNameOf(by);
     const pubKey = info.pubkey;
+    const name = info.name;
+    certificate.issuserName = name;
     const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
     if (verified) {
       return certificate;
@@ -197,7 +199,7 @@ class CertClient {
       const info = await this.getPubKeyAndNameOf(by);
       const pubKey = info.pubkey;
       const name = info.name;
-      certificate.name = name;
+      certificate.issueserName = name;
       const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
       if (verified) {
         validCertificates.push(certificate);
