@@ -15,6 +15,9 @@ class CertClient {
     });
     this.rsaKeyPair = getKeyPair(uid);
     this.seed = getSeed(uid);
+    this.cache = {
+      certificates: {},
+    }
   }
   async init() {
     this.address = await this.getFirstAddress();
@@ -205,6 +208,7 @@ class CertClient {
         validCertificates.push(certificate);
       }
     }
+    this.cache.certificates[address] = validCertificates;
     return validCertificates;
   }
 }
