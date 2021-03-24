@@ -59,7 +59,7 @@ class CertClient {
       throw new Error("The name must be 16 characters or less.");
     }
     return await this.sendTransaction({
-      "icon": icon
+      "icon": ipfsHash,
     }, this.address);
   }
   async getProfile(address) {
