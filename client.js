@@ -75,12 +75,13 @@ class CertClient {
     if (pubkey === null) {
       throw new Error("public key is not found.");
     }
-    for (const bundle of bundles.reverse()) {
+    bundles.reverse();
+    for (const bundle of bundles) {
       if (this.isNameObject(bundle)) {
         name = bundle.name;
       }
     }
-    for (const bundle of bundles.reverse()) {
+    for (const bundle of bundles) {
       if (this.isIconObject(bundle)) {
         icon = bundle.icon;
       }
