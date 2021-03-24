@@ -70,6 +70,7 @@ class CertClient {
     for (const bundle of bundles) {
       if (this.isPubKeyObject(bundle)) {
         pubkey = bundle.pubkey;
+        break;
       }
     }
     if (pubkey === null) {
@@ -79,11 +80,13 @@ class CertClient {
     for (const bundle of bundles) {
       if (this.isNameObject(bundle)) {
         name = bundle.name;
+        break;
       }
     }
     for (const bundle of bundles) {
       if (this.isIconObject(bundle)) {
         icon = bundle.icon;
+        break;
       }
     }
     return {

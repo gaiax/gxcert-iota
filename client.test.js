@@ -172,6 +172,6 @@ test("register and get pubkey", async () => {
     "pubkey": dummyPubKey
   }, clientA.address);
   pubkey = (await clientA.getProfile(clientA.address)).pubkey;
-  expect(pubkey).not.toEqual(clientA.rsaKeyPair.pubKey);
+  expect(pubkey).toEqual(clientA.rsaKeyPair.pubKey);
 });
 
