@@ -54,6 +54,14 @@ class CertClient {
       "name": name
     }, this.address);
   }
+  async registerIcon(ipfsHash) {
+    if (!ipfsHash) {
+      throw new Error("The name must be 16 characters or less.");
+    }
+    return await this.sendTransaction({
+      "icon": icon
+    }, this.address);
+  }
   async getPubKeyAndNameOf(address) {
     const bundles = await this.getBundles(address);
     let pubkey = null;
@@ -91,6 +99,12 @@ class CertClient {
   }
   isNameObject(json) {
     if (!json.name) {
+      return false;
+    }
+    return true;
+  }
+  isIconObject(json) {
+    if (!json.icon) {
       return false;
     }
     return true;
