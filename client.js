@@ -50,16 +50,20 @@ class CertClient {
     if (name.length > 16) {
       throw new Error("The name must be 16 characters or less.");
     }
+    const sig = this.sign(name);
     return await this.sendTransaction({
-      "name": name
+      "name": name,
+      "sig": sig,
     }, this.address);
   }
   async registerIcon(ipfsHash) {
     if (!ipfsHash) {
       throw new Error("The name must be 16 characters or less.");
     }
+    const sig = this.sign(ipfsHash);
     return await this.sendTransaction({
       "icon": ipfsHash,
+      "sig": sig,
     }, this.address);
   }
   async getProfile(address) {
@@ -78,13 +82,13 @@ class CertClient {
     }
     bundles.reverse();
     for (const bundle of bundles) {
-      if (this.isNameObject(bundle)) {
+      if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, pubkey)) {
         name = bundle.name;
         break;
       }
     }
     for (const bundle of bundles) {
-      if (this.isIconObject(bundle)) {
+      if (this.isIconObject(bundle) && this.verify(bundle.icon, bundle.sig, pubkey)) {
         icon = bundle.icon;
         break;
       }
@@ -109,13 +113,13 @@ class CertClient {
     return true;
   }
   isNameObject(json) {
-    if (!json.name) {
+    if (!json.name || !json.sig) {
       return false;
     }
     return true;
   }
   isIconObject(json) {
-    if (!json.icon) {
+    if (!json.icon || !json.sig) {
       return false;
     }
     return true;
