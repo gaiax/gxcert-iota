@@ -22,7 +22,7 @@ class CertClient {
   async init() {
     this.address = await this.getFirstAddress();
     try {
-      await this.getPubKeyAndNameOf(this.address);
+      await this.getProfile(this.address);
     } catch(err) {
       await this.registerPubKey();
     }
@@ -62,10 +62,11 @@ class CertClient {
       "icon": icon
     }, this.address);
   }
-  async getPubKeyAndNameOf(address) {
+  async getProfile(address) {
     const bundles = await this.getBundles(address);
     let pubkey = null;
     let name = null;
+    let icon = null;
     for (const bundle of bundles) {
       if (this.isPubKeyObject(bundle)) {
         pubkey = bundle.pubkey;
@@ -79,9 +80,15 @@ class CertClient {
         name = bundle.name;
       }
     }
+    for (const bundle of bundles.reverse()) {
+      if (this.isIconObject(bundle)) {
+        icon = bundle.icon;
+      }
+    }
     return {
       pubkey,
       name,
+      icon,
     }
   }
   certificateText(ipfs, date) {
@@ -189,7 +196,7 @@ class CertClient {
     const by = certificate.by;
     const time = certificate.time;
     const sig = certificate.sig;
-    const info = await this.getPubKeyAndNameOf(by);
+    const info = await this.getProfile(by);
     const pubKey = info.pubkey;
     const name = info.name;
     certificate.issuserName = name;
@@ -213,7 +220,7 @@ class CertClient {
       const by = certificate.by;
       const time = certificate.time;
       const sig = certificate.sig;
-      const info = await this.getPubKeyAndNameOf(by);
+      const info = await this.getProfile(by);
       const pubKey = info.pubkey;
       const name = info.name;
       certificate.issueserName = name;

@@ -165,13 +165,13 @@ test("register and get pubkey", async () => {
   const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
   await clientA.init();
   await clientB.init();
-  let pubkey = (await clientA.getPubKeyAndNameOf(clientA.address)).pubkey;
+  let pubkey = (await clientA.getProfile(clientA.address)).pubkey;
   expect(pubkey).toEqual(clientA.rsaKeyPair.pubKey);
   const dummyPubKey = clientB.rsaKeyPair.pubKey;
   await clientB.sendTransaction({
     "pubkey": dummyPubKey
   }, clientA.address);
-  pubkey = (await clientA.getPubKeyAndNameOf(clientA.address)).pubkey;
+  pubkey = (await clientA.getProfile(clientA.address)).pubkey;
   expect(pubkey).not.toEqual(clientA.rsaKeyPair.pubKey);
 });
 
