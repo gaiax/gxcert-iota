@@ -67,6 +67,7 @@ class CertClient {
     }, this.address);
   }
   async getProfile(address) {
+    console.log("getProfile: " + address);
     const bundles = await this.getBundles(address);
     let pubkey = null;
     let name = null;
