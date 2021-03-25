@@ -141,6 +141,9 @@ class CertClient {
     const key = cryptico.publicKeyFromString(pubKey);
     return key.verifyString(text, signature);
   }
+  verifyCertificate(certificate) {
+    return this.verify(this.certificateText(certificate.ipfs, certificate.time));
+  }
   async getBundles(address) {
     const transactions = (await this.iota.findTransactionObjects({ addresses: [address] })).sort((a, b) => {
       if (a.timestamp > b.timestamp) {
@@ -197,30 +200,11 @@ class CertClient {
     if (!address) {
       address = this.address;
     }
-    const bundles = await this.getBundles(address);
-    const that = this;
-    const certificates = bundles.filter(bundle => {
-      return that.isCertObject(bundle);
-    });
-    const certificate = certificates[index];
-    const by = certificate.by;
-    const time = certificate.time;
-    const sig = certificate.sig;
-    let profile;
-    if (by in this.cache.profiles) {
-      profile = this.cache.profiles[by];
-    } else {
-      profile = await this.getProfile(by);
-      this.cache.profiles[by] = profile;
+    const certificates = await this.getCertificates(address);
+    if (index >= certificates.length) {
+      throw new Error("Certificate not found.");
     }
-    const pubKey = profile.pubkey;
-    const name = profile.name;
-    certificate.issuserName = name;
-    const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
-    if (verified) {
-      return certificate;
-    }
-    throw new Error("Certificate is invalid");
+    return certificates[index];
   }
   async getCertificates(address) {
     if (!address) {
@@ -246,10 +230,7 @@ class CertClient {
       const pubKey = profile.pubkey;
       const name = profile.name;
       certificate.issueserName = name;
-      const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
-      if (verified) {
-        validCertificates.push(certificate);
-      }
+      validCertificates.push(certificate);
     }
     this.cache.certificates[address] = validCertificates;
     return validCertificates;
