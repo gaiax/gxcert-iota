@@ -175,3 +175,16 @@ test("register and get pubkey", async () => {
   expect(pubkey).toEqual(clientA.rsaKeyPair.pubKey);
 });
 
+test("register name and icon", async () => {
+  const passphrase = generateRandomString(32);
+  const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
+  await client.init();
+  await client.registerName("Alice1");
+  await client.registerName("Alice2");
+  await client.registerIcon("Image1");
+  await client.registerIcon("Image2");
+  const profile = await client.getProfile(client.address);
+  expect(profile.name).toEqual("Alice2");
+  expect(profile.icon).toEqual("Image2");
+});
+
