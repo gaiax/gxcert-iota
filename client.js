@@ -218,6 +218,7 @@ class CertClient {
     if (!address) {
       address = this.address;
     }
+    const profiles = {};
     const bundles = await this.getBundles(address);
     const that = this;
     const certificates = bundles.filter(bundle => {
@@ -228,9 +229,15 @@ class CertClient {
       const by = certificate.by;
       const time = certificate.time;
       const sig = certificate.sig;
-      const info = await this.getProfile(by);
-      const pubKey = info.pubkey;
-      const name = info.name;
+      let profile;
+      if (by in profiles) {
+        profile = profiles[by];
+      } else {
+        profile = await this.getProfile(by);
+        profiles[by] = profile;
+      }
+      const pubKey = profile.pubkey;
+      const name = profile.name;
       certificate.issueserName = name;
       const verified = this.verify(this.certificateText(certificate.ipfs, time), sig, pubKey);
       if (verified) {
