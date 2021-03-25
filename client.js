@@ -17,6 +17,7 @@ class CertClient {
     this.seed = getSeed(uid);
     this.cache = {
       certificates: {},
+      profiles: {},
     }
   }
   async init() {
@@ -219,7 +220,6 @@ class CertClient {
     if (!address) {
       address = this.address;
     }
-    const profiles = {};
     const bundles = await this.getBundles(address);
     const that = this;
     const certificates = bundles.filter(bundle => {
@@ -231,11 +231,11 @@ class CertClient {
       const time = certificate.time;
       const sig = certificate.sig;
       let profile;
-      if (by in profiles) {
-        profile = profiles[by];
+      if (by in this.cache.profiles) {
+        profile = this.cache.profiles[by];
       } else {
         profile = await this.getProfile(by);
-        profiles[by] = profile;
+        this.cache.profiles[by] = profile;
       }
       const pubKey = profile.pubkey;
       const name = profile.name;
