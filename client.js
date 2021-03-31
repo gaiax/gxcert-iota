@@ -15,6 +15,7 @@ class CertClient {
     });
     this.rsaKeyPair = getKeyPair(uid);
     this.seed = getSeed(uid);
+    this.uid = uid;
     this.cache = {
       certificates: {},
       profiles: {},
