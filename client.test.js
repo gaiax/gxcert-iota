@@ -188,3 +188,23 @@ test("register name and icon", async () => {
   expect(profile.icon).toEqual("Image2");
 });
 
+
+test("verify certificate", async () => {
+  const passphraseA = generateRandomString(32);
+  const passphraseB = generateRandomString(32);
+  const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
+  const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
+  await clientA.init();
+  await clientB.init();
+  const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
+  const title = "title";
+  let certificate = clientA.createCertificateObject(title, ipfs, clientB.address);
+  let verified = await clientB.verifyCertificate(certificate, clientB.address);
+  expect(verified).toEqual(true);
+  verified = await clientB.verifyCertificate(certificate, clientA.address);
+  expect(verified).toEqual(false);
+  certificate = clientA.createCertificateObject(title, ipfs, clientB.address);
+  certificate.title = "dummy";
+  verified = await clientB.verifyCertificate(certificate, clientB.address);
+  expect(verified).toEqual(false);
+});

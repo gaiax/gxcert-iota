@@ -42,6 +42,11 @@ class CertClient {
     }
     return true;
   }
+  async verifyCertificate(certificate, to) {
+    const text = this.certificateText(certificate.title, certificate.ipfs, certificate.time, to);
+    const profile = await this.getProfile(certificate.by);
+    return this.verify(text, certificate.sig, profile.pubkey);
+  }
   async registerPubKey() {
     const pubKey = this.rsaKeyPair.pubKey;
     return await this.sendTransaction({
