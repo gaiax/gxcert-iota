@@ -51,8 +51,8 @@ test("sign and verify", async() => {
 test("certificate text", () => {
   const passphrase = generateRandomString(32);
   const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
-  const text = client.certificateText("abcd", new Date());
-  expect(text.endsWith("abcd") && text.length > 4).toEqual(true);
+  const text = client.certificateText("title", "abcd", new Date());
+  expect(text.endsWith("title:abcd") && text.length > 4).toEqual(true);
 });
 
 test("post and get bundle", async () => {
@@ -86,30 +86,42 @@ test("is certificate json", () => {
     time: (new Date()).getTime() / 1000,
     sig: "sig",
     by: "by",
+    title: "title",
   });
   expect(isCert).toEqual(true);
   isCert = client.isCertObject({
     time: (new Date()).getTime() / 1000,
     sig: "sig",
     by: "by",
+    title: "title",
   });
   expect(isCert).toEqual(false);
   isCert = client.isCertObject({
     ipfs: "A",
     sig: "sig",
     by: "by",
+    title: "title",
   });
   expect(isCert).toEqual(false);
   isCert = client.isCertObject({
     ipfs: "A",
     time: (new Date()).getTime() / 1000,
     by: "by",
+    title: "title",
   });
   expect(isCert).toEqual(false);
   isCert = client.isCertObject({
     ipfs: "A",
     time: (new Date()).getTime() / 1000,
     sig: "sig",
+    title: "title",
+  });
+  expect(isCert).toEqual(false);
+  isCert = client.isCertObject({
+    ipfs: "A",
+    time: (new Date()).getTime() / 1000,
+    sig: "sig",
+    by: "by",
   });
   expect(isCert).toEqual(false);
 });
@@ -120,8 +132,10 @@ test("create certificate object", () => {
   const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
   const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
   const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
-  const certificate = clientA.createCertificateObject(ipfs);
+  const title = "title";
+  const certificate = clientA.createCertificateObject(title, ipfs);
   expect(certificate.ipfs).toEqual(ipfs);
+  expect(certificate.title).toEqual(title);
   expect(certificate.sig.length > 0).toEqual(true);
 });
 
@@ -133,7 +147,8 @@ test("issue certificate", async () => {
   await clientA.init();
   await clientB.init();
   const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
-  const certificate = clientA.createCertificateObject(ipfs);
+  const title = "title";
+  const certificate = clientA.createCertificateObject(title, ipfs);
   await clientA.issueCertificate(certificate, clientB.address);
   const certificates = await clientB.getCertificates(clientB.address);
   expect(certificates[0].ipfs).toEqual(ipfs);
@@ -173,22 +188,3 @@ test("register name and icon", async () => {
   expect(profile.icon).toEqual("Image2");
 });
 
-test("verify certificate", async () => {
-  const passphraseA = generateRandomString(32);
-  const passphraseB = generateRandomString(32);
-  const clientA = new CertClient("https://nodes.devnet.iota.org", passphraseA);
-  const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
-  await clientA.init();
-  await clientB.init();
-  const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
-  let certificate = clientB.createCertificateObject(ipfs);
-  await clientA.issueCertificate(certificate, clientB.address);
-  let verified = clientB.verifyCertificate(certificate);
-  expect(verified).toEqual(true);
-  certificate = clientB.createCertificateObject(ipfs);
-  certificate.by = clientA.address;
-  await clientA.issueCertificate(certificate, clientB.address);
-  verified = clientB.verifyCertificate(certificate);
-  expect(verified).toEqual(false);
-
-});

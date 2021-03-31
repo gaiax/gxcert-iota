@@ -102,12 +102,12 @@ class CertClient {
       icon,
     }
   }
-  certificateText(ipfs, date) {
+  certificateText(title, ipfs, date) {
     let time = date;
     if (date instanceof Date) {
       time = Math.floor(date.getTime() / 1000);
     }
-    return time.toString() + ":" + ipfs;
+    return time.toString() + ":" + title + ":" + ipfs;
   }
   isPubKeyObject(json) {
     if (!json.pubkey) {
@@ -128,7 +128,7 @@ class CertClient {
     return true;
   }
   isCertObject(json) {
-    if (!json.ipfs || !json.time || !json.sig || !json.by) {
+    if (!json.ipfs || !json.time || !json.sig || !json.by || !json.title) {
       return false;
     }
     return true;
@@ -141,9 +141,6 @@ class CertClient {
   verify(text, signature, pubKey) {
     const key = cryptico.publicKeyFromString(pubKey);
     return key.verifyString(text, signature);
-  }
-  verifyCertificate(certificate) {
-    return this.verify(this.certificateText(certificate.ipfs, certificate.time));
   }
   async getBundles(address) {
     const transactions = (await this.iota.findTransactionObjects({ addresses: [address] })).sort((a, b) => {
@@ -184,13 +181,14 @@ class CertClient {
   async issueCertificate(certObject, address) {
     return await this.sendTransaction(certObject, address);
   }
-  createCertificateObject(ipfs) {
+  createCertificateObject(title, ipfs) {
     const now = new Date();
     const time = Math.floor(now.getTime() / 1000);
-    const text = this.certificateText(ipfs, now);
+    const text = this.certificateText(title, ipfs, now);
     const sig = this.sign(text);
     const by = this.address;
     return {
+      title,
       ipfs,
       time,
       sig,
