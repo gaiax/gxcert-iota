@@ -51,8 +51,8 @@ test("sign and verify", async() => {
 test("certificate text", () => {
   const passphrase = generateRandomString(32);
   const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
-  const text = client.certificateText("title", "abcd", new Date());
-  expect(text.endsWith("title:abcd") && text.length > 4).toEqual(true);
+  const text = client.certificateText("title", "abcd", new Date(), client.address);
+  expect(text.endsWith("title:abcd:" + client.address) && text.length > 4).toEqual(true);
 });
 
 test("post and get bundle", async () => {
@@ -133,7 +133,7 @@ test("create certificate object", () => {
   const clientB = new CertClient("https://nodes.devnet.iota.org", passphraseB);
   const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
   const title = "title";
-  const certificate = clientA.createCertificateObject(title, ipfs);
+  const certificate = clientA.createCertificateObject(title, ipfs, clientB.address);
   expect(certificate.ipfs).toEqual(ipfs);
   expect(certificate.title).toEqual(title);
   expect(certificate.sig.length > 0).toEqual(true);
@@ -148,7 +148,7 @@ test("issue certificate", async () => {
   await clientB.init();
   const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
   const title = "title";
-  const certificate = clientA.createCertificateObject(title, ipfs);
+  const certificate = clientA.createCertificateObject(title, ipfs, clientB.address);
   await clientA.issueCertificate(certificate, clientB.address);
   const certificates = await clientB.getCertificates(clientB.address);
   expect(certificates[0].ipfs).toEqual(ipfs);

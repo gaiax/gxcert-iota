@@ -102,12 +102,12 @@ class CertClient {
       icon,
     }
   }
-  certificateText(title, ipfs, date) {
+  certificateText(title, ipfs, date, to) {
     let time = date;
     if (date instanceof Date) {
       time = Math.floor(date.getTime() / 1000);
     }
-    return time.toString() + ":" + title + ":" + ipfs;
+    return time.toString() + ":" + title + ":" + ipfs + ":" + to;
   }
   isPubKeyObject(json) {
     if (!json.pubkey) {
@@ -181,10 +181,10 @@ class CertClient {
   async issueCertificate(certObject, address) {
     return await this.sendTransaction(certObject, address);
   }
-  createCertificateObject(title, ipfs) {
+  createCertificateObject(title, ipfs, to) {
     const now = new Date();
     const time = Math.floor(now.getTime() / 1000);
-    const text = this.certificateText(title, ipfs, now);
+    const text = this.certificateText(title, ipfs, now, to);
     const sig = this.sign(text);
     const by = this.address;
     return {
