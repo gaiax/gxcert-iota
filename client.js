@@ -54,7 +54,7 @@ class CertClient {
     }, this.address);
   }
   async registerName(name) {
-    if (name.length > 16) {
+    if (name.length > 32) {
       throw new Error("The name must be 16 characters or less.");
     }
     const sig = this.sign(name);
@@ -187,6 +187,9 @@ class CertClient {
     return await this.sendTransaction(certObject, address);
   }
   createCertificateObject(title, ipfs, to) {
+    if (title.length > 16) {
+      throw new Error("title must be 16 characters or less");
+    }
     const now = new Date();
     const time = Math.floor(now.getTime() / 1000);
     const text = this.certificateText(title, ipfs, now, to);
