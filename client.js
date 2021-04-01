@@ -238,6 +238,31 @@ class CertClient {
     });
     return receipts;
   }
+  async getCertificatesIIssuesed() {
+    const receipts = await this.getReceipts();
+    const transactionHashes = receipts.map(receipt => {
+      return receipt.transactionHash;
+    });
+    const transactions = (await this.iota.getTransactionObjects(transactionHashes)).sort((a, b) => {
+      if (a.timestamp > b.timestamp) {
+        return 1; 
+      }
+      if (a.timestamp < b.timestamp) {
+        return -1;
+      }
+      return 0;
+    });
+    const hashes = transactions.map(transaction => {
+      return transaction.hash;
+    });
+    const bundles = [];
+    for (const hash of hashes) {
+      const bundle = await this.iota.getBundle(hash);
+      const json = JSON.parse(Extract.extractJson(bundle));
+      bundles.push(json);
+    }
+    return bundles;
+  }
   async getCertificates(address) {
     if (!address) {
       address = this.address;
