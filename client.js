@@ -261,6 +261,10 @@ class CertClient {
       const json = JSON.parse(Extract.extractJson(bundle));
       bundles.push(json);
     }
+    for (let i = 0; i < receipts.length; i++) {
+      const to = receipts[i].certHolder;
+      bundles[i].to = to;
+    }
     return bundles;
   }
   async getCertificates(address) {

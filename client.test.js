@@ -164,6 +164,7 @@ test("issue certificate", async () => {
   expect(certificatesIIssuesed[0].time).toEqual(certificates[0].time);
   expect(certificatesIIssuesed[0].sig).toEqual(certificates[0].sig);
   expect(certificatesIIssuesed[0].by).toEqual(certificates[0].by);
+  expect(certificatesIIssuesed[0].to).toEqual(clientB.address);
 });
 
 test("register and get pubkey", async () => {
