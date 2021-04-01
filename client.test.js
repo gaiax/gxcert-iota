@@ -156,6 +156,9 @@ test("issue certificate", async () => {
   expect(certificates[0].time).not.toEqual(undefined);
   expect(certificates[0].sig.length > 0).toEqual(true);
   expect(certificates[0].by).toEqual(clientA.address);
+  const receipts = await clientA.getReceipts();
+  console.log(receipts);
+  expect(receipts.length).toEqual(1);
 });
 
 test("register and get pubkey", async () => {

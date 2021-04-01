@@ -138,6 +138,12 @@ class CertClient {
     }
     return true;
   }
+  isReceiptObject(json) {
+    if (!json.transactionHash || !json.certHolder) {
+      return false;
+    }
+    return true;
+  }
   sign(text) {
     const privKey = this.rsaKeyPair.privKey;
     const signature = privKey.signString(text, "sha256");
@@ -184,7 +190,9 @@ class CertClient {
     return hash;
   }
   async issueCertificate(certObject, address) {
-    return await this.sendTransaction(certObject, address);
+    const transactionHash = await this.sendTransaction(certObject, address);
+    const receipt = this.createReceiptObject(transactionHash, address);
+    return await this.sendTransaction(receipt, this.address);
   }
   createCertificateObject(title, ipfs, to) {
     if (title.length > 16) {
@@ -203,6 +211,12 @@ class CertClient {
       by,
     }
   }
+  createReceiptObject(transactionHash, certHolder) {
+    return {
+      transactionHash,
+      certHolder,
+    }
+  }
   async getCertificate(address, index) {
     if (!address) {
       address = this.address;
@@ -212,6 +226,17 @@ class CertClient {
       throw new Error("Certificate not found.");
     }
     return certificates[index];
+  }
+  async getReceipts(address) {
+    if (!address) {
+      address = this.address;
+    }
+    const that = this;
+    const bundles = await this.getBundles(address);
+    const receipts = bundles.filter(bundle => {
+      return that.isReceiptObject(bundle);
+    });
+    return receipts;
   }
   async getCertificates(address) {
     if (!address) {
