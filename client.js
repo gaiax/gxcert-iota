@@ -16,6 +16,7 @@ class CertClient {
     this.rsaKeyPair = getKeyPair(uid);
     this.seed = getSeed(uid);
     this.uid = uid;
+    this.profile = null;
     this.cache = {
       certificates: {},
       profiles: {},
@@ -24,7 +25,7 @@ class CertClient {
   async init() {
     this.address = await this.getFirstAddress();
     try {
-      await this.getProfile(this.address);
+      this.profile = await this.getProfile(this.address);
     } catch(err) {
       await this.registerPubKey();
     }
