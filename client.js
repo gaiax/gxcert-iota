@@ -178,6 +178,7 @@ class CertClient {
     for (; i < hashes.length; i++) {
       const hash = hashes[i];
       const bundle = await this.iota.getBundle(hash);
+      console.log("get bundle");
       const json = JSON.parse(Extract.extractJson(bundle));
       bundles.push(json);
     }
