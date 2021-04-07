@@ -249,8 +249,11 @@ class CertClient {
     });
     return receipts;
   }
-  async getCertificatesIIssuesed() {
-    const receipts = await this.getReceipts();
+  async getCertificatesIIssuesed(address) {
+    if (!address) {
+      address = this.address;
+    }
+    const receipts = await this.getReceipts(address);
     const transactionHashes = receipts.map(receipt => {
       return receipt.transactionHash;
     });
