@@ -20,12 +20,14 @@ class CertClient {
     this.cache = {
       certificates: {},
       profiles: {},
+      bundles: {},
     }
   }
   async init() {
     this.address = await this.getFirstAddress();
     try {
       this.profile = await this.getProfile(this.address);
+      this.cache.profiles[this.address] = this.profile;
     } catch(err) {
       await this.registerPubKey();
     }
@@ -168,11 +170,18 @@ class CertClient {
       return transaction.hash;
     });
     let bundles = [];
-    for (const hash of hashes) {
+    let i = 0;
+    if (address in this.cache.bundles) {
+      i = this.cache.bundles[address].length
+      bundles = this.cache.bundles[address];
+    }
+    for (; i < hashes.length; i++) {
+      const hash = hashes[i];
       const bundle = await this.iota.getBundle(hash);
       const json = JSON.parse(Extract.extractJson(bundle));
       bundles.push(json);
     }
+    this.cache.bundles[address] = bundles;
     return bundles;
   }
   async sendTransaction(messageObject, to) {
