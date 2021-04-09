@@ -13,8 +13,10 @@ class CertClient {
     this.iota = Iota.composeAPI({
       provider
     });
-    this.rsaKeyPair = getKeyPair(uid);
-    this.seed = getSeed(uid);
+    if (uid) {
+      this.rsaKeyPair = getKeyPair(uid);
+      this.seed = getSeed(uid);
+    }
     this.uid = uid;
     this.profile = null;
     this.cache = {
