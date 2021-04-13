@@ -97,7 +97,12 @@ class CertClient {
     bundles.reverse();
     for (const bundle of bundles) {
       if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, pubkey)) {
-        name = new Buffer(bundle.name, "base64").toString("utf-8");
+        try {
+          name = new Buffer(bundle.name, "base64").toString("utf-8");
+        } catch(err) {
+          console.error(err);
+          name = "";
+        }
         break;
       }
     }
