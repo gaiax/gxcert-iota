@@ -59,12 +59,13 @@ class CertClient {
     }, this.address);
   }
   async registerName(name) {
-    if (name.length > 32) {
+    const encodedName = Buffer.from(name).toString("base64");
+    if (encodedName.length > 32) {
       throw new Error("The name must be 16 characters or less.");
     }
-    const sig = this.sign(name);
+    const sig = this.sign(encodedName);
     return await this.sendTransaction({
-      "name": name,
+      "name": encodedName,
       "sig": sig,
     }, this.address);
   }
@@ -96,7 +97,7 @@ class CertClient {
     bundles.reverse();
     for (const bundle of bundles) {
       if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, pubkey)) {
-        name = bundle.name;
+        name = new Buffer(bundle.name, "base64").toString("utf-8");
         break;
       }
     }

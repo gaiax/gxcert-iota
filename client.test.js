@@ -188,19 +188,14 @@ test("register name and icon", async () => {
   const passphrase = generateRandomString(32);
   const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
   await client.init();
-  let error = null;
-  try {
-    client.registerName("12345678901234567");
-  } catch(err) {
-    error = err;
-  }
-  expect(error !== null).not.toEqual(true);
   await client.registerName("Alice1");
-  await client.registerName("Alice2");
+  let profile = await client.getProfile(client.address);
+  expect(profile.name).toEqual("Alice1");
+  await client.registerName("たくと");
   await client.registerIcon("Image1");
   await client.registerIcon("Image2");
-  const profile = await client.getProfile(client.address);
-  expect(profile.name).toEqual("Alice2");
+  profile = await client.getProfile(client.address);
+  expect(profile.name).toEqual("たくと");
   expect(profile.icon).toEqual("Image2");
 });
 
