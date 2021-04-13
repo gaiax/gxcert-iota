@@ -101,7 +101,7 @@ class CertClient {
           name = new Buffer(bundle.name, "base64").toString("utf-8");
         } catch(err) {
           console.error(err);
-          name = "";
+          name = bundle.name;
         }
         break;
       }
