@@ -209,7 +209,13 @@ class CertClient {
     return hash;
   }
   async issueCertificate(certObject, address) {
-    const transactionHash = await this.sendTransaction(certObject, address);
+    const transactionHash = await this.sendTransaction({
+      title: Buffer.from(certObject.title).toString("base64"),
+      ipfs: certObject.ipfs,
+      time: certObject.time,
+      sig: certObject.sig,
+      by: certObject.by,
+    }, address);
     const receipt = this.createReceiptObject(transactionHash, address);
     return await this.sendTransaction(receipt, this.address);
   }
@@ -286,6 +292,7 @@ class CertClient {
     for (let i = 0; i < receipts.length; i++) {
       const to = receipts[i].certHolder;
       bundles[i].to = to;
+      bundles[i].decodedTitle = new Buffer(bundles[i].title, "base64").toString("utf-8");
     }
     return bundles;
   }
@@ -303,6 +310,7 @@ class CertClient {
       const by = certificate.by;
       const time = certificate.time;
       const sig = certificate.sig;
+      const title = new Buffer(certificate.title, "base64").toString("utf-8");
       let profile;
       if (by in this.cache.profiles) {
         profile = this.cache.profiles[by];
@@ -313,6 +321,7 @@ class CertClient {
       const pubKey = profile.pubkey;
       const name = profile.name;
       certificate.issueserName = name;
+      certificate.decodedTitle = title;
       validCertificates.push(certificate);
     }
     this.cache.certificates[address] = validCertificates;

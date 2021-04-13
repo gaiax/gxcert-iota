@@ -151,6 +151,7 @@ test("issue certificate", async () => {
   const certificate = clientA.createCertificateObject(title, ipfs, clientB.address);
   await clientA.issueCertificate(certificate, clientB.address);
   const certificates = await clientB.getCertificates(clientB.address);
+  expect(certificates[0].decodedTitle).toEqual(title);
   expect(certificates[0].ipfs).toEqual(ipfs);
   expect(certificates[0].time).not.toEqual(null);
   expect(certificates[0].time).not.toEqual(undefined);
@@ -160,6 +161,7 @@ test("issue certificate", async () => {
   console.log(receipts);
   expect(receipts.length).toEqual(1);
   const certificatesIIssuesed = await clientA.getCertificatesIIssuesed();
+  expect(certificatesIIssuesed[0].decodedTitle).toEqual(certificates[0].decodedTitle);
   expect(certificatesIIssuesed[0].ipfs).toEqual(certificates[0].ipfs);
   expect(certificatesIIssuesed[0].time).toEqual(certificates[0].time);
   expect(certificatesIIssuesed[0].sig).toEqual(certificates[0].sig);
