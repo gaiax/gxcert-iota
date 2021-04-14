@@ -59,13 +59,9 @@ class CertClient {
     }, this.address);
   }
   async registerName(name) {
-    const encodedName = Buffer.from(name).toString("base64");
-    if (encodedName.length > 32) {
-      throw new Error("The name must be 16 characters or less.");
-    }
-    const sig = this.sign(encodedName);
+    const sig = this.sign(name);
     return await this.sendTransaction({
-      "name": encodedName,
+      "name": name,
       "sig": sig,
     }, this.address);
   }
@@ -97,12 +93,7 @@ class CertClient {
     bundles.reverse();
     for (const bundle of bundles) {
       if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, pubkey)) {
-        try {
-          name = new Buffer(bundle.name, "base64").toString("utf-8");
-        } catch(err) {
-          console.error(err);
-          name = bundle.name;
-        }
+        name = bundle.name;
         break;
       }
     }
@@ -209,13 +200,7 @@ class CertClient {
     return hash;
   }
   async issueCertificate(certObject, address) {
-    const transactionHash = await this.sendTransaction({
-      title: Buffer.from(certObject.title).toString("base64"),
-      ipfs: certObject.ipfs,
-      time: certObject.time,
-      sig: certObject.sig,
-      by: certObject.by,
-    }, address);
+    const transactionHash = await this.sendTransaction(certObject, address);
     const receipt = this.createReceiptObject(transactionHash, address);
     return await this.sendTransaction(receipt, this.address);
   }
@@ -292,7 +277,6 @@ class CertClient {
     for (let i = 0; i < receipts.length; i++) {
       const to = receipts[i].certHolder;
       bundles[i].to = to;
-      bundles[i].decodedTitle = new Buffer(bundles[i].title, "base64").toString("utf-8");
     }
     return bundles;
   }
@@ -310,7 +294,6 @@ class CertClient {
       const by = certificate.by;
       const time = certificate.time;
       const sig = certificate.sig;
-      const title = new Buffer(certificate.title, "base64").toString("utf-8");
       let profile;
       if (by in this.cache.profiles) {
         profile = this.cache.profiles[by];
@@ -321,7 +304,6 @@ class CertClient {
       const pubKey = profile.pubkey;
       const name = profile.name;
       certificate.issueserName = name;
-      certificate.decodedTitle = title;
       validCertificates.push(certificate);
     }
     this.cache.certificates[address] = validCertificates;

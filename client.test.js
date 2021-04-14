@@ -151,7 +151,7 @@ test("issue certificate", async () => {
   const certificate = clientA.createCertificateObject(title, ipfs, clientB.address);
   await clientA.issueCertificate(certificate, clientB.address);
   const certificates = await clientB.getCertificates(clientB.address);
-  expect(certificates[0].decodedTitle).toEqual(title);
+  expect(certificates[0].title).toEqual(title);
   expect(certificates[0].ipfs).toEqual(ipfs);
   expect(certificates[0].time).not.toEqual(null);
   expect(certificates[0].time).not.toEqual(undefined);
@@ -161,7 +161,7 @@ test("issue certificate", async () => {
   console.log(receipts);
   expect(receipts.length).toEqual(1);
   const certificatesIIssuesed = await clientA.getCertificatesIIssuesed();
-  expect(certificatesIIssuesed[0].decodedTitle).toEqual(certificates[0].decodedTitle);
+  expect(certificatesIIssuesed[0].title).toEqual(certificates[0].title);
   expect(certificatesIIssuesed[0].ipfs).toEqual(certificates[0].ipfs);
   expect(certificatesIIssuesed[0].time).toEqual(certificates[0].time);
   expect(certificatesIIssuesed[0].sig).toEqual(certificates[0].sig);
@@ -191,13 +191,11 @@ test("register name and icon", async () => {
   const client = new CertClient("https://nodes.devnet.iota.org", passphrase);
   await client.init();
   await client.registerName("Alice1");
-  let profile = await client.getProfile(client.address);
-  expect(profile.name).toEqual("Alice1");
-  await client.registerName("たくと");
+  await client.registerName("Alice2");
   await client.registerIcon("Image1");
   await client.registerIcon("Image2");
-  profile = await client.getProfile(client.address);
-  expect(profile.name).toEqual("たくと");
+  const profile = await client.getProfile(client.address);
+  expect(profile.name).toEqual("Alice2");
   expect(profile.icon).toEqual("Image2");
 });
 
