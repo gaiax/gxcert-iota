@@ -205,9 +205,6 @@ class CertClient {
     return await this.sendTransaction(receipt, this.address);
   }
   createCertificateObject(title, ipfs, to) {
-    if (title.length > 16) {
-      throw new Error("title must be 16 characters or less");
-    }
     const now = new Date();
     const time = Math.floor(now.getTime() / 1000);
     const text = this.certificateText(title, ipfs, now, to);
