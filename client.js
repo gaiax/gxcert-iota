@@ -48,7 +48,7 @@ class CertClient {
     return true;
   }
   async verifyCertificate(certificate, to) {
-    const text = this.certificateText(certificate.title, certificate.ipfs, certificate.time, to);
+    const text = this.certificateText(certificate.title, certificate.description, certificate.ipfs, certificate.time, to);
     const profile = await this.getProfile(certificate.by);
     return this.verify(text, certificate.sig, profile.pubkey);
   }
@@ -109,12 +109,12 @@ class CertClient {
       icon,
     }
   }
-  certificateText(title, ipfs, date, to) {
+  certificateText(title, description, ipfs, date, to) {
     let time = date;
     if (date instanceof Date) {
       time = Math.floor(date.getTime() / 1000);
     }
-    return time.toString() + ":" + title + ":" + ipfs + ":" + to;
+    return time.toString() + ":" + title + ":" + description + ":" + ipfs + ":" + to;
   }
   isPubKeyObject(json) {
     if (!json.pubkey) {
@@ -135,7 +135,7 @@ class CertClient {
     return true;
   }
   isCertObject(json) {
-    if (!json.ipfs || !json.time || !json.sig || !json.by || !json.title) {
+    if (!json.ipfs || !json.description || !json.time || !json.sig || !json.by || !json.title) {
       return false;
     }
     return true;
@@ -204,14 +204,15 @@ class CertClient {
     const receipt = this.createReceiptObject(transactionHash, address);
     return await this.sendTransaction(receipt, this.address);
   }
-  createCertificateObject(title, ipfs, to) {
+  createCertificateObject(title, description, ipfs, to) {
     const now = new Date();
     const time = Math.floor(now.getTime() / 1000);
-    const text = this.certificateText(title, ipfs, now, to);
+    const text = this.certificateText(title, description, ipfs, now, to);
     const sig = this.sign(text);
     const by = this.address;
     return {
       title,
+      description,
       ipfs,
       time,
       sig,
