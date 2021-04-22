@@ -4,6 +4,7 @@ const Converter = require("@iota/converter");
 const { getSeed } = require("./seed");
 const { getKeyPair } = require("./rsa");
 const cryptico = require("cryptico");
+const IpfsClient = require("./ipfs");
 
 const depth = 3;
 const minimumWeightMagnitude = 9;
@@ -19,6 +20,7 @@ class CertClient {
     }
     this.uid = uid;
     this.profile = null;
+    this.ipfsClient = new IpfsClient("ipfs.infura.io");
     this.cache = {
       certificates: {},
       profiles: {},
@@ -246,7 +248,7 @@ class CertClient {
     });
     return receipts;
   }
-  async getCertificatesIIssuesed(address) {
+  async getCertificatesIIssuesed(address, update) {
     if (!address) {
       address = this.address;
     }
@@ -274,11 +276,32 @@ class CertClient {
     }
     for (let i = 0; i < receipts.length; i++) {
       const to = receipts[i].certHolder;
+      const title = bundles[i].title;
+      const description = bundles[i].description;
+      this.ipfsClient.getTextOnIpfs(title).then(title => {
+        bundles[i].titleInIpfs = title;
+        if (update) {
+          update(bundles);
+        }
+      }).catch(err => {
+        console.error(err);
+      });
+      this.ipfsClient.getTextOnIpfs(description).then(description => {
+        bundles[i].descriptionInIpfs = description;
+        if (update) {
+          update(bundles);
+        }
+      }).catch(err => {
+        console.error(err);
+      });
       bundles[i].to = to;
+    }
+    if (update) {
+      update(bundles);
     }
     return bundles;
   }
-  async getCertificates(address) {
+  async getCertificates(address, update) {
     if (!address) {
       address = this.address;
     }
@@ -292,6 +315,24 @@ class CertClient {
       const by = certificate.by;
       const time = certificate.time;
       const sig = certificate.sig;
+      const title = certificate.title;
+      const description = certificate.description;
+      this.ipfsClient.getTextOnIpfs(title).then(title => {
+        certificate.titleInIpfs = title;
+        if (update) {
+          update(validCertificates);
+        }
+      }).catch(err => {
+        console.error(err);
+      });
+      this.ipfsClient.getTextOnIpfs(description).then(description => {
+        certificate.descriptionInIpfs = description;
+        if (update) {
+          update(validCertificates);
+        }
+      }).catch(err => {
+        console.error(err);
+      });
       let profile;
       if (by in this.cache.profiles) {
         profile = this.cache.profiles[by];
@@ -305,6 +346,9 @@ class CertClient {
       validCertificates.push(certificate);
     }
     this.cache.certificates[address] = validCertificates;
+    if (update) {
+      update(validCertificates);
+    }
     return validCertificates;
   }
 }
