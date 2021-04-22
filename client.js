@@ -278,22 +278,37 @@ class CertClient {
       const to = receipts[i].certHolder;
       const title = bundles[i].title;
       const description = bundles[i].description;
-      this.ipfsClient.getTextOnIpfs(title).then(title => {
-        bundles[i].titleInIpfs = title;
-        if (update) {
-          update(bundles);
-        }
-      }).catch(err => {
-        console.error(err);
-      });
-      this.ipfsClient.getTextOnIpfs(description).then(description => {
-        bundles[i].descriptionInIpfs = description;
-        if (update) {
-          update(bundles);
-        }
-      }).catch(err => {
-        console.error(err);
-      });
+      const ipfs = bundles[i].ipfs;
+      if (!bundles[i].imageUrl) {
+        this.ipfsClient.getImageOnIpfs(ipfs).then(imageUrl => {
+          bundles[i].imageUrl = imageUrl;
+          if (update) {
+            update(bundles);
+          }
+        }).catch(err => {
+          console.error(err);
+        });
+      }
+      if (!bundles[i].titleInIpfs) {
+        this.ipfsClient.getTextOnIpfs(title).then(title => {
+          bundles[i].titleInIpfs = title;
+          if (update) {
+            update(bundles);
+          }
+        }).catch(err => {
+          console.error(err);
+        });
+      }
+      if (!bundles[i].descriptionInIpfs) {
+        this.ipfsClient.getTextOnIpfs(description).then(description => {
+          bundles[i].descriptionInIpfs = description;
+          if (update) {
+            update(bundles);
+          }
+        }).catch(err => {
+          console.error(err);
+        });
+      }
       bundles[i].to = to;
     }
     if (update) {
@@ -315,24 +330,39 @@ class CertClient {
       const by = certificate.by;
       const time = certificate.time;
       const sig = certificate.sig;
+      const ipfs = certificate.ipfs;
       const title = certificate.title;
       const description = certificate.description;
-      this.ipfsClient.getTextOnIpfs(title).then(title => {
-        certificate.titleInIpfs = title;
-        if (update) {
-          update(validCertificates);
-        }
-      }).catch(err => {
-        console.error(err);
-      });
-      this.ipfsClient.getTextOnIpfs(description).then(description => {
-        certificate.descriptionInIpfs = description;
-        if (update) {
-          update(validCertificates);
-        }
-      }).catch(err => {
-        console.error(err);
-      });
+      if (!certificate.imageUrl) {
+        this.ipfsClient.getImageOnIpfs(ipfs).then(imageUrl => {
+          certificate.imageUrl = imageUrl;
+          if (update) {
+            update(validCertificates);
+          }
+        }).catch(err => {
+          console.error(err);
+        });
+      }
+      if (!certificate.titleInIpfs) {
+        this.ipfsClient.getTextOnIpfs(title).then(title => {
+          certificate.titleInIpfs = title;
+          if (update) {
+            update(validCertificates);
+          }
+        }).catch(err => {
+          console.error(err);
+        });
+      }
+      if (!certificate.descriptionInIpfs) {
+        this.ipfsClient.getTextOnIpfs(description).then(description => {
+          certificate.descriptionInIpfs = description;
+          if (update) {
+            update(validCertificates);
+          }
+        }).catch(err => {
+          console.error(err);
+        });
+      }
       let profile;
       if (by in this.cache.profiles) {
         profile = this.cache.profiles[by];
