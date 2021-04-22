@@ -25,6 +25,7 @@ class CertClient {
       certificates: {},
       profiles: {},
       bundles: {},
+      hashToBundle: {},
     }
   }
   async init() {
@@ -178,9 +179,15 @@ class CertClient {
     }
     for (; i < hashes.length; i++) {
       const hash = hashes[i];
-      const bundle = await this.iota.getBundle(hash);
+      let bundle;
+      if (hash in this.cache.hashToBundle) {
+        bundle = this.cache.hashToBundle;
+      } else {
+        bundle = await this.iota.getBundle(hash);
+      }
       console.log("get bundle");
       const json = JSON.parse(Extract.extractJson(bundle));
+      this.cache.hashToBundle[hash] = json;
       bundles.push(json);
     }
     this.cache.bundles[address] = bundles;
@@ -270,8 +277,14 @@ class CertClient {
     });
     const bundles = [];
     for (const hash of hashes) {
-      const bundle = await this.iota.getBundle(hash);
+      let bundle;
+      if (hash in this.cache.hashToBundle) {
+        bundle = this.cache.hashToBundle[hash];
+      } else {
+        bundle = await this.iota.getBundle(hash);
+      }
       const json = JSON.parse(Extract.extractJson(bundle));
+      this.cache.hashToBundle[hash] = json;
       bundles.push(json);
     }
     for (let i = 0; i < receipts.length; i++) {
