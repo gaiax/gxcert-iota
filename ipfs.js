@@ -26,6 +26,7 @@ function IpfsClient (host) {
     return tmp.buffer;
   };
   this.getTextOnIpfs = async function (ipfsHash) {
+    console.log("ipfs text");
     const response = await ipfs.get(ipfsHash);
     for await (const data of response) {
       console.log(data);
@@ -38,6 +39,7 @@ function IpfsClient (host) {
     return null;
   }
   this.getImageOnIpfs = async function (ipfsHash) {
+    console.log("ipfs image");
     const response = await ipfs.get(ipfsHash);
     for await (const data of response) {
       console.log(data);
