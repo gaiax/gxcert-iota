@@ -179,14 +179,14 @@ class CertClient {
     }
     for (; i < hashes.length; i++) {
       const hash = hashes[i];
-      let bundle;
+      let json;
       if (hash in this.cache.hashToBundle) {
-        bundle = this.cache.hashToBundle;
+        json = this.cache.hashToBundle[hash];
       } else {
-        bundle = await this.iota.getBundle(hash);
+        const bundle = await this.iota.getBundle(hash);
+        json = JSON.parse(Extract.extractJson(bundle));
       }
       console.log("get bundle");
-      const json = JSON.parse(Extract.extractJson(bundle));
       this.cache.hashToBundle[hash] = json;
       bundles.push(json);
     }
@@ -278,12 +278,13 @@ class CertClient {
     const bundles = [];
     for (const hash of hashes) {
       let bundle;
+      let json;
       if (hash in this.cache.hashToBundle) {
-        bundle = this.cache.hashToBundle[hash];
+        json = this.cache.hashToBundle[hash];
       } else {
-        bundle = await this.iota.getBundle(hash);
+        const bundle = await this.iota.getBundle(hash);
+        json = JSON.parse(Extract.extractJson(bundle));
       }
-      const json = JSON.parse(Extract.extractJson(bundle));
       this.cache.hashToBundle[hash] = json;
       bundles.push(json);
     }
