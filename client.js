@@ -184,7 +184,11 @@ class CertClient {
         json = this.cache.hashToBundle[hash];
       } else {
         const bundle = await this.iota.getBundle(hash);
-        json = JSON.parse(Extract.extractJson(bundle));
+        try {
+          json = JSON.parse(Extract.extractJson(bundle));
+        } catch(err) {
+          continue;
+        }
       }
       console.log("get bundle");
       this.cache.hashToBundle[hash] = json;
@@ -283,7 +287,11 @@ class CertClient {
         json = this.cache.hashToBundle[hash];
       } else {
         const bundle = await this.iota.getBundle(hash);
-        json = JSON.parse(Extract.extractJson(bundle));
+        try {
+          json = JSON.parse(Extract.extractJson(bundle));
+        } catch(err) {
+          continue;
+        }
       }
       this.cache.hashToBundle[hash] = json;
       bundles.push(json);
