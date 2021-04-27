@@ -32,7 +32,6 @@ class CertClient {
     this.address = await this.getFirstAddress();
     try {
       this.profile = await this.getProfile(this.address);
-      this.cache.profiles[this.address] = this.profile;
     } catch(err) {
       await this.registerPubKey();
     }
@@ -78,39 +77,45 @@ class CertClient {
       "sig": sig,
     }, this.address);
   }
-  async getProfile(address) {
+  async getProfile(address, update) {
     console.log("getProfile: " + address);
     const bundles = await this.getBundles(address);
-    let pubkey = null;
-    let name = null;
-    let icon = null;
+    let profile = {};
     for (const bundle of bundles) {
       if (this.isPubKeyObject(bundle)) {
-        pubkey = bundle.pubkey;
+        profile.pubkey = bundle.pubkey;
         break;
       }
     }
-    if (pubkey === null) {
+    if (!profile.pubkey) {
       throw new Error("public key is not found.");
     }
     bundles.reverse();
     for (const bundle of bundles) {
       if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, pubkey)) {
-        name = bundle.name;
+        profile.name = bundle.name;
         break;
       }
     }
     for (const bundle of bundles) {
       if (this.isIconObject(bundle) && this.verify(bundle.icon, bundle.sig, pubkey)) {
-        icon = bundle.icon;
+        profile.icon = bundle.icon;
+        this.ipfsClient.getImageOnIpfs(profile.icon).then(imageUrl => {
+          profile.imageUrl = imageUrl;
+          if (update) {
+            update(profile);
+          }
+        }).catch(err => {
+          console.error(err);
+        });
         break;
       }
     }
-    return {
-      pubkey,
-      name,
-      icon,
+    this.cache.profiles[address] = profile;
+    if (update) {
+      update(profile);
     }
+    return profile;
   }
   certificateText(title, description, ipfs, date, to) {
     let time = date;
@@ -390,7 +395,6 @@ class CertClient {
         profile = this.cache.profiles[by];
       } else {
         profile = await this.getProfile(by);
-        this.cache.profiles[by] = profile;
       }
       const pubKey = profile.pubkey;
       const name = profile.name;
