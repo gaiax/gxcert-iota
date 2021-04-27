@@ -13,7 +13,7 @@ function IpfsClient (host) {
     return imageUrl;
   }
   this.postResource = async function (resource) {
-    const response = await ipfs.add(text);
+    const response = await ipfs.add(resource);
     if (response) {
       return response.path;
     }

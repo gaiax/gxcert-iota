@@ -61,9 +61,10 @@ class CertClient {
     }, this.address);
   }
   async registerName(name) {
-    const sig = this.sign(name);
+    const ipfsHash = await this.ipfsClient.postResource(name);
+    const sig = this.sign(ipfsHash);
     return await this.sendTransaction({
-      "name": name,
+      "name": ipfsHash,
       "sig": sig,
     }, this.address);
   }
@@ -94,6 +95,14 @@ class CertClient {
     for (const bundle of bundles) {
       if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, pubkey)) {
         profile.name = bundle.name;
+        this.ipfsClient.getTextOnIpfs(profile.name).then(name => {
+          profile.nameInIpfs = name;
+          if (update) {
+            update(profile);
+          }
+        }).catch(err => {
+          console.error(err);
+        });
         break;
       }
     }

@@ -206,7 +206,7 @@ test("register name and icon", async () => {
   await client.registerIcon("Image1");
   await client.registerIcon("Image2");
   const profile = await client.getProfile(client.address);
-  expect(profile.name).toEqual("Alice2");
+  expect(profile.name).toEqual("QmTddebgzpxB91Wz3epcnFHs4eKyv24AFnUqJgy4ntvHJE"); //Alice2
   expect(profile.icon).toEqual("Image2");
 });
 
