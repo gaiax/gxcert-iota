@@ -93,7 +93,7 @@ class CertClient {
     }
     bundles.reverse();
     for (const bundle of bundles) {
-      if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, pubkey)) {
+      if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, profile.pubkey)) {
         profile.name = bundle.name;
         this.ipfsClient.getTextOnIpfs(profile.name).then(name => {
           profile.nameInIpfs = name;
@@ -107,7 +107,7 @@ class CertClient {
       }
     }
     for (const bundle of bundles) {
-      if (this.isIconObject(bundle) && this.verify(bundle.icon, bundle.sig, pubkey)) {
+      if (this.isIconObject(bundle) && this.verify(bundle.icon, bundle.sig, profile.pubkey)) {
         profile.icon = bundle.icon;
         this.ipfsClient.getImageOnIpfs(profile.icon).then(imageUrl => {
           profile.imageUrl = imageUrl;
