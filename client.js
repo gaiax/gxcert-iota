@@ -407,7 +407,16 @@ class CertClient {
       }
       const pubKey = profile.pubkey;
       const name = profile.name;
-      certificate.issueserName = name;
+      if (!certificate.issueserName) {
+        this.ipfsClient.getTextOnIpfs(name).then(name => {
+          certificate.issueserName = name;
+          if (update) {
+            update(validCertificates);
+          }
+        }).catch(err => {
+          console.error(err);
+        });
+      }
       validCertificates.push(certificate);
     }
     this.cache.certificates[address] = validCertificates;
