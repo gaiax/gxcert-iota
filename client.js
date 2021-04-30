@@ -273,7 +273,7 @@ class CertClient {
     });
     return receipts;
   }
-  async getCertificatesIIssuesed(address, update) {
+  async getCertificatesIIssued(address, update) {
     if (!address) {
       address = this.address;
     }
@@ -407,9 +407,9 @@ class CertClient {
       }
       const pubKey = profile.pubkey;
       const name = profile.name;
-      if (!certificate.issueserName) {
+      if (!certificate.issuerName) {
         this.ipfsClient.getTextOnIpfs(name).then(name => {
-          certificate.issueserName = name;
+          certificate.issuerName = name;
           if (update) {
             update(validCertificates);
           }

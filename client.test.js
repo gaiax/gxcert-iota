@@ -171,13 +171,13 @@ test("issue certificate", async () => {
   const receipts = await clientA.getReceipts();
   console.log(receipts);
   expect(receipts.length).toEqual(1);
-  const certificatesIIssuesed = await clientA.getCertificatesIIssuesed();
-  expect(certificatesIIssuesed[0].title).toEqual(certificates[0].title);
-  expect(certificatesIIssuesed[0].ipfs).toEqual(certificates[0].ipfs);
-  expect(certificatesIIssuesed[0].time).toEqual(certificates[0].time);
-  expect(certificatesIIssuesed[0].sig).toEqual(certificates[0].sig);
-  expect(certificatesIIssuesed[0].by).toEqual(certificates[0].by);
-  expect(certificatesIIssuesed[0].to).toEqual(clientB.address);
+  const certificatesIIssued = await clientA.getCertificatesIIssued();
+  expect(certificatesIIssued[0].title).toEqual(certificates[0].title);
+  expect(certificatesIIssued[0].ipfs).toEqual(certificates[0].ipfs);
+  expect(certificatesIIssued[0].time).toEqual(certificates[0].time);
+  expect(certificatesIIssued[0].sig).toEqual(certificates[0].sig);
+  expect(certificatesIIssued[0].by).toEqual(certificates[0].by);
+  expect(certificatesIIssued[0].to).toEqual(clientB.address);
 });
 
 test("register and get pubkey", async () => {
