@@ -197,8 +197,8 @@ class CertClient {
       if (hash in this.cache.hashToBundle) {
         json = this.cache.hashToBundle[hash];
       } else {
-        const bundle = await this.iota.getBundle(hash);
         try {
+          const bundle = await this.iota.getBundle(hash);
           json = JSON.parse(Extract.extractJson(bundle));
         } catch(err) {
           continue;
