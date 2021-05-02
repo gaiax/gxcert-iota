@@ -174,13 +174,7 @@ class CertClient {
   }
   async getBundles(address) {
     const transactions = (await this.iota.findTransactionObjects({ addresses: [address] })).sort((a, b) => {
-      if (a.timestamp > b.timestamp) {
-        return 1; 
-      }
-      if (a.timestamp < b.timestamp) {
-        return -1;
-      }
-      return 0;
+      return a.timestamp > b.timestamp;
     });
     const hashes = transactions.map(transaction => {
       return transaction.hash;
