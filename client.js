@@ -9,6 +9,13 @@ const IpfsClient = require("./ipfs");
 const depth = 3;
 const minimumWeightMagnitude = 9;
 
+function reverse(arr){
+  if(toString.call(arr) !== '[object Array]') return null;
+  if(arr.length === 0) return arr;
+  var copy = arr.slice();
+  return copy.reverse();
+}
+
 class CertClient {
   constructor(provider, uid) {
     this.iota = Iota.composeAPI({
@@ -80,7 +87,7 @@ class CertClient {
   }
   async getProfile(address, update) {
     console.log("getProfile: " + address);
-    const bundles = await this.getBundles(address);
+    let bundles = await this.getBundles(address);
     let profile = {};
     for (const bundle of bundles) {
       if (this.isPubKeyObject(bundle)) {
@@ -91,7 +98,7 @@ class CertClient {
     if (!profile.pubkey) {
       throw new Error("public key is not found.");
     }
-    bundles.reverse();
+    bundles = reverse(bundles);
     for (const bundle of bundles) {
       if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, profile.pubkey)) {
         profile.name = bundle.name;
@@ -174,7 +181,7 @@ class CertClient {
   }
   async getBundles(address) {
     const transactions = (await this.iota.findTransactionObjects({ addresses: [address] })).sort((a, b) => {
-      return a.timestamp > b.timestamp;
+      return a.timestamp < b.timestamp;
     });
     const hashes = transactions.map(transaction => {
       return transaction.hash;
@@ -276,13 +283,7 @@ class CertClient {
       return receipt.transactionHash;
     });
     const transactions = (await this.iota.getTransactionObjects(transactionHashes)).sort((a, b) => {
-      if (a.timestamp > b.timestamp) {
-        return 1; 
-      }
-      if (a.timestamp < b.timestamp) {
-        return -1;
-      }
-      return 0;
+      return a.timestamp < b.timestamp;
     });
     const hashes = transactions.map(transaction => {
       return transaction.hash;
