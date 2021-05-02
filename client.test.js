@@ -157,8 +157,8 @@ test("issue certificate", async () => {
   await clientA.init();
   await clientB.init();
   const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
-  const title = "title";
-  const description = "description";
+  const title = await clientA.ipfsClient.postResource("title");
+  const description = await clientA.ipfsClient.postResource("description");
   const certificate = clientA.createCertificateObject(title, description, ipfs, clientB.address);
   await clientA.issueCertificate(certificate, clientB.address);
   const certificates = await clientB.getCertificates(clientB.address);
@@ -168,6 +168,10 @@ test("issue certificate", async () => {
   expect(certificates[0].time).not.toEqual(undefined);
   expect(certificates[0].sig.length > 0).toEqual(true);
   expect(certificates[0].by).toEqual(clientA.address);
+  await clientB.getTitle(clientB.address, 0);
+  expect(certificates[0].titleInIpfs).toEqual("title");
+  await clientB.getDescription(clientB.address, 0);
+  expect(certificates[0].descriptionInIpfs).toEqual("description");
   const receipts = await clientA.getReceipts();
   console.log(receipts);
   expect(receipts.length).toEqual(1);
@@ -178,6 +182,10 @@ test("issue certificate", async () => {
   expect(certificatesIIssued[0].sig).toEqual(certificates[0].sig);
   expect(certificatesIIssued[0].by).toEqual(certificates[0].by);
   expect(certificatesIIssued[0].to).toEqual(clientB.address);
+  await clientA.getTitleIIssued(clientA.address, 0);
+  expect(certificatesIIssued[0].titleInIpfs).toEqual("title");
+  await clientA.getDescriptionIIssued(clientA.address, 0);
+  expect(certificatesIIssued[0].descriptionInIpfs).toEqual("description");
 });
 
 test("register and get pubkey", async () => {
@@ -231,3 +239,4 @@ test("verify certificate", async () => {
   verified = await clientB.verifyCertificate(certificate, clientB.address);
   expect(verified).toEqual(false);
 });
+

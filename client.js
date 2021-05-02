@@ -315,42 +315,48 @@ class CertClient {
       const title = bundles[i].title;
       const description = bundles[i].description;
       const ipfs = bundles[i].ipfs;
-      if (!bundles[i].imageUrl) {
-        this.ipfsClient.getImageOnIpfs(ipfs).then(imageUrl => {
-          bundles[i].imageUrl = imageUrl;
-          if (update) {
-            update(bundles);
-          }
-        }).catch(err => {
-          console.error(err);
-        });
-      }
-      if (!bundles[i].titleInIpfs) {
-        this.ipfsClient.getTextOnIpfs(title).then(title => {
-          bundles[i].titleInIpfs = title;
-          if (update) {
-            update(bundles);
-          }
-        }).catch(err => {
-          console.error(err);
-        });
-      }
-      if (!bundles[i].descriptionInIpfs) {
-        this.ipfsClient.getTextOnIpfs(description).then(description => {
-          bundles[i].descriptionInIpfs = description;
-          if (update) {
-            update(bundles);
-          }
-        }).catch(err => {
-          console.error(err);
-        });
-      }
       bundles[i].to = to;
     }
     if (update) {
       update(bundles);
     }
     return bundles;
+  }
+  async getImageUrl(address, index) {
+    const certificates = await this.getCertificates(address);
+    const imageUrl = await this.ipfsClient.getImageOnIpfs(certificates[index].ipfs);
+    certificates[index].imageUrl = imageUrl;
+    return certificates;
+  }
+  async getTitle(address, index) {
+    const certificates = await this.getCertificates(address);
+    const title = await this.ipfsClient.getTextOnIpfs(certificates[index].title);
+    certificates[index].titleInIpfs = title;
+    return certificates;
+  }
+  async getDescription(address, index) {
+    const certificates = await this.getCertificates(address);
+    const description = await this.ipfsClient.getTextOnIpfs(certificates[index].description);
+    certificates[index].descriptionInIpfs = description;
+    return certificates;
+  }
+  async getImageUrlIIssued(address, index) {
+    const certificates = await this.getCertificatesIIssued(address);
+    const imageUrl = await this.ipfsClient.getImageOnIpfs(certificates[index].ipfs);
+    certificates[index].imageUrl = imageUrl;
+    return certificates;
+  }
+  async getTitleIIssued(address, index) {
+    const certificates = await this.getCertificatesIIssued(address);
+    const title = await this.ipfsClient.getTextOnIpfs(certificates[index].title);
+    certificates[index].titleInIpfs = title;
+    return certificates;
+  }
+  async getDescriptionIIssued(address, index) {
+    const certificates = await this.getCertificatesIIssued(address);
+    const description = await this.ipfsClient.getTextOnIpfs(certificates[index].description);
+    certificates[index].descriptionInIpfs = description;
+    return certificates;
   }
   async getCertificates(address, update) {
     if (!address) {
@@ -369,36 +375,6 @@ class CertClient {
       const ipfs = certificate.ipfs;
       const title = certificate.title;
       const description = certificate.description;
-      if (!certificate.imageUrl) {
-        this.ipfsClient.getImageOnIpfs(ipfs).then(imageUrl => {
-          certificate.imageUrl = imageUrl;
-          if (update) {
-            update(validCertificates);
-          }
-        }).catch(err => {
-          console.error(err);
-        });
-      }
-      if (!certificate.titleInIpfs) {
-        this.ipfsClient.getTextOnIpfs(title).then(title => {
-          certificate.titleInIpfs = title;
-          if (update) {
-            update(validCertificates);
-          }
-        }).catch(err => {
-          console.error(err);
-        });
-      }
-      if (!certificate.descriptionInIpfs) {
-        this.ipfsClient.getTextOnIpfs(description).then(description => {
-          certificate.descriptionInIpfs = description;
-          if (update) {
-            update(validCertificates);
-          }
-        }).catch(err => {
-          console.error(err);
-        });
-      }
       let profile;
       if (by in this.cache.profiles) {
         profile = this.cache.profiles[by];
