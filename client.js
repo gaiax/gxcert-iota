@@ -315,37 +315,73 @@ class CertClient {
   }
   async getImageUrl(address, index) {
     const certificates = await this.getCertificates(address);
-    const imageUrl = await this.ipfsClient.getImageOnIpfs(certificates[index].ipfs);
+    let imageUrl;
+    try {
+      imageUrl = await this.ipfsClient.getImageOnIpfs(certificates[index].ipfs);
+    } catch(err) {
+      console.error(err);
+      return certificates;
+    }
     certificates[index].imageUrl = imageUrl;
     return certificates;
   }
   async getTitle(address, index) {
     const certificates = await this.getCertificates(address);
-    const title = await this.ipfsClient.getTextOnIpfs(certificates[index].title);
+    let title;
+    try {
+      title = await this.ipfsClient.getTextOnIpfs(certificates[index].title);
+    } catch(err) {
+      console.error(err);
+      return certificates;
+    }
     certificates[index].titleInIpfs = title;
     return certificates;
   }
   async getDescription(address, index) {
     const certificates = await this.getCertificates(address);
-    const description = await this.ipfsClient.getTextOnIpfs(certificates[index].description);
+    let description;
+    try {
+      description = await this.ipfsClient.getTextOnIpfs(certificates[index].description);
+    } catch(err) {
+      console.error(err);
+      return certificates;
+    }
     certificates[index].descriptionInIpfs = description;
     return certificates;
   }
   async getImageUrlIIssued(address, index) {
     const certificates = await this.getCertificatesIIssued(address);
-    const imageUrl = await this.ipfsClient.getImageOnIpfs(certificates[index].ipfs);
+    let imageUrl;
+    try {
+      imageUrl = await this.ipfsClient.getImageOnIpfs(certificates[index].ipfs);
+    } catch(err) {
+      console.error(err);
+      return certificates;
+    }
     certificates[index].imageUrl = imageUrl;
     return certificates;
   }
   async getTitleIIssued(address, index) {
     const certificates = await this.getCertificatesIIssued(address);
-    const title = await this.ipfsClient.getTextOnIpfs(certificates[index].title);
+    let title;
+    try {
+      title = await this.ipfsClient.getTextOnIpfs(certificates[index].title);
+    } catch(err) {
+      console.error(err);
+      return certificates;
+    }
     certificates[index].titleInIpfs = title;
     return certificates;
   }
   async getDescriptionIIssued(address, index) {
     const certificates = await this.getCertificatesIIssued(address);
-    const description = await this.ipfsClient.getTextOnIpfs(certificates[index].description);
+    let description;
+    try {
+      description = await this.ipfsClient.getTextOnIpfs(certificates[index].description);
+    } catch(err) {
+      console.error(err);
+      return certificates;
+    }
     certificates[index].descriptionInIpfs = description;
     return certificates;
   }
