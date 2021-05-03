@@ -188,10 +188,12 @@ class CertClient {
     });
     let bundles = [];
     let i = 0;
+    /*
     if (address in this.cache.bundles) {
       i = this.cache.bundles[address].length
       bundles = this.cache.bundles[address].slice();
     }
+    */
     for (; i < hashes.length; i++) {
       const hash = hashes[i];
       let json;
