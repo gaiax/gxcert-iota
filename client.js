@@ -98,8 +98,8 @@ class CertClient {
     if (!profile.pubkey) {
       throw new Error("public key is not found.");
     }
-    bundles = reverse(bundles);
-    for (const bundle of bundles) {
+    for (let i = bundles.length - 1; i >= 0; i--) {
+      const bundle = bundles[i];
       if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, profile.pubkey)) {
         profile.name = bundle.name;
         this.ipfsClient.getTextOnIpfs(profile.name).then(name => {
@@ -113,7 +113,8 @@ class CertClient {
         break;
       }
     }
-    for (const bundle of bundles) {
+    for (let i = bundles.length - 1; i >= 0; i--) {
+      const bundle = bundles[i];
       if (this.isIconObject(bundle) && this.verify(bundle.icon, bundle.sig, profile.pubkey)) {
         profile.icon = bundle.icon;
         this.ipfsClient.getImageOnIpfs(profile.icon).then(imageUrl => {
@@ -187,15 +188,7 @@ class CertClient {
       return transaction.hash;
     });
     let bundles = [];
-    let i = 0;
-    /*
-    if (address in this.cache.bundles) {
-      i = this.cache.bundles[address].length
-      bundles = this.cache.bundles[address].slice();
-    }
-    */
-    for (; i < hashes.length; i++) {
-      const hash = hashes[i];
+    for (const hash of hashes) {
       let json;
       if (hash in this.cache.hashToBundle) {
         json = this.cache.hashToBundle[hash];
