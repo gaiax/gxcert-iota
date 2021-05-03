@@ -204,6 +204,7 @@ class CertClient {
           const bundle = await this.iota.getBundle(hash);
           json = JSON.parse(Extract.extractJson(bundle));
         } catch(err) {
+          console.error(err);
           continue;
         }
       }
