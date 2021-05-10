@@ -1,4 +1,4 @@
-const Iota = require("@iota/core");
+const { SingleNodeClient } = require("@iota/iota.js");
 const Extract = require("@iota/extract-json");
 const Converter = require("@iota/converter");
 const { getSeed } = require("./seed");
@@ -17,13 +17,10 @@ function reverse(arr){
 }
 
 class CertClient {
-  constructor(provider, uid) {
-    this.iota = Iota.composeAPI({
-      provider
-    });
+  constructor(apiEndpoint, uid) {
+    this.iotaClient = new SingleNodeClient(apiEndpoint);
     if (uid) {
       this.rsaKeyPair = getKeyPair(uid);
-      this.seed = getSeed(uid);
     }
     this.uid = uid;
     this.profile = null;
@@ -36,22 +33,14 @@ class CertClient {
     }
   }
   async init() {
-    this.address = await this.getFirstAddress();
     try {
       this.profile = await this.getProfile(this.address);
     } catch(err) {
-      await this.registerPubKey();
+      console.error(err);
     }
-    console.log(this.address);
   }
-  async getFirstAddress(seed) {
-    if (!seed) {
-      return (await this.iota.getNewAddress(this.seed, { index: 0, securityLevel: 2, total: 1}))[0];
-    }
-    return (await this.iota.getNewAddress(seed, { index: 0, securityLevel: 2, total: 1 }))[0];
-  }
-  async verifyAddress(address) {
-    if (this.address !== address) {
+  async verifyPubKey(pubKey) {
+    if (this.rsaKeyPair.pubKey !== pubKey) {
       return false;
     }
     return true;
@@ -61,36 +50,37 @@ class CertClient {
     const profile = await this.getProfile(certificate.by);
     return this.verify(text, certificate.sig, profile.pubkey);
   }
-  async registerPubKey() {
-    const pubKey = this.rsaKeyPair.pubKey;
-    return await this.sendTransaction({
-      "pubkey": pubKey
-    }, this.address);
+  async sendMessage(obj, to) {
+    
+  }
+  async getMessages(pubKey) {
+    const index = "gxcert:" + pubKey;
+
   }
   async registerName(name) {
     const ipfsHash = await this.ipfsClient.postResource(name);
     const sig = this.sign(ipfsHash);
-    return await this.sendTransaction({
+    return await this.sendMessage({
       "name": ipfsHash,
       "sig": sig,
-    }, this.address);
+    }, this.rsaKeyPair.pubKey);
   }
   async registerIcon(ipfsHash) {
     if (!ipfsHash) {
       throw new Error("The name must be 16 characters or less.");
     }
     const sig = this.sign(ipfsHash);
-    return await this.sendTransaction({
+    return await this.sendMessage({
       "icon": ipfsHash,
       "sig": sig,
-    }, this.address);
+    }, this.rsaKeyPair.pubKey);
   }
-  async getProfile(address, update) {
-    console.log("getProfile: " + address);
-    let bundles = await this.getBundles(address);
+  async getProfile(pubKey, update) {
+    console.log("getProfile: " + pubKey);
+    let messages = await this.getMessages(pubKey);
     let profile = {};
-    for (const bundle of bundles) {
-      if (this.isPubKeyObject(bundle)) {
+    for (const message of messages) {
+      if (this.isPubKeyObject(message)) {
         profile.pubkey = bundle.pubkey;
         break;
       }
@@ -98,10 +88,10 @@ class CertClient {
     if (!profile.pubkey) {
       throw new Error("public key is not found.");
     }
-    for (let i = bundles.length - 1; i >= 0; i--) {
-      const bundle = bundles[i];
-      if (this.isNameObject(bundle) && this.verify(bundle.name, bundle.sig, profile.pubkey)) {
-        profile.name = bundle.name;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const message = messages[i];
+      if (this.isNameObject(message) && this.verify(message.name, message.sig, profile.pubkey)) {
+        profile.name = message.name;
         this.ipfsClient.getTextOnIpfs(profile.name).then(name => {
           profile.nameInIpfs = name;
           if (update) {
@@ -113,10 +103,10 @@ class CertClient {
         break;
       }
     }
-    for (let i = bundles.length - 1; i >= 0; i--) {
-      const bundle = bundles[i];
-      if (this.isIconObject(bundle) && this.verify(bundle.icon, bundle.sig, profile.pubkey)) {
-        profile.icon = bundle.icon;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const message = messages[i];
+      if (this.isIconObject(message) && this.verify(message.icon, message.sig, profile.pubkey)) {
+        profile.icon = message.icon;
         this.ipfsClient.getImageOnIpfs(profile.icon).then(imageUrl => {
           profile.imageUrl = imageUrl;
           if (update) {
@@ -128,7 +118,7 @@ class CertClient {
         break;
       }
     }
-    this.cache.profiles[address] = profile;
+    this.cache.profiles[pubKey] = profile;
     if (update) {
       update(profile);
     }
@@ -142,19 +132,19 @@ class CertClient {
     return time.toString() + ":" + title + ":" + description + ":" + ipfs + ":" + to;
   }
   isPubKeyObject(json) {
-    if (!json.pubkey) {
+    if (!json.pubkey || !json.time) {
       return false;
     }
     return true;
   }
   isNameObject(json) {
-    if (!json.name || !json.sig) {
+    if (!json.name || !json.sig || !json.time) {
       return false;
     }
     return true;
   }
   isIconObject(json) {
-    if (!json.icon || !json.sig) {
+    if (!json.icon || !json.sig || !json.time) {
       return false;
     }
     return true;
@@ -166,7 +156,7 @@ class CertClient {
     return true;
   }
   isReceiptObject(json) {
-    if (!json.transactionHash || !json.certHolder) {
+    if (!json.messageId || !json.certHolder || !json.time) {
       return false;
     }
     return true;
@@ -223,17 +213,17 @@ class CertClient {
     const hash = bundle[0].hash;
     return hash;
   }
-  async issueCertificate(certObject, address) {
-    const transactionHash = await this.sendTransaction(certObject, address);
-    const receipt = this.createReceiptObject(transactionHash, address);
-    return await this.sendTransaction(receipt, this.address);
+  async issueCertificate(certObject, pubKey) {
+    const messageId = await this.sendMessage(certObject, pubKey);
+    const receipt = this.createReceiptObject(messageId, pubKey);
+    return await this.sendMessage(receipt, this.rsaKeyPair.pubKey);
   }
   createCertificateObject(title, description, ipfs, to) {
     const now = new Date();
     const time = Math.floor(now.getTime() / 1000);
     const text = this.certificateText(title, description, ipfs, now, to);
     const sig = this.sign(text);
-    const by = this.address;
+    const by = this.rsaKeyPair.pubKey;
     return {
       title,
       description,
@@ -243,78 +233,53 @@ class CertClient {
       by,
     }
   }
-  createReceiptObject(transactionHash, certHolder) {
+  createReceiptObject(messageId, certHolder) {
     return {
-      transactionHash,
+      messageId,
       certHolder,
     }
   }
-  async getCertificate(address, index) {
-    if (!address) {
-      address = this.address;
-    }
-    const certificates = await this.getCertificates(address);
-    if (index >= certificates.length) {
-      throw new Error("Certificate not found.");
-    }
-    return certificates[index];
-  }
-  async getReceipts(address) {
-    if (!address) {
-      address = this.address;
+  async getReceipts(pubKey) {
+    if (!pubKey) {
+      pubKey = this.rsaKeyPair.pubKey;
     }
     const that = this;
-    const bundles = await this.getBundles(address);
-    const receipts = bundles.filter(bundle => {
-      return that.isReceiptObject(bundle);
+    const messages = await this.getMessages(pubKey);
+    const receipts = messages.filter(message => {
+      return that.isReceiptObject(message);
     });
     return receipts;
   }
-  async getCertificatesIIssued(address, update) {
-    if (!address) {
-      address = this.address;
+  async getCertificatesIIssued(pubKey, update) {
+    if (!pubKey) {
+      pubKey = this.rsaKeyPair.pubKey;
     }
-    const receipts = await this.getReceipts(address);
-    const transactionHashes = receipts.map(receipt => {
-      return receipt.transactionHash;
+    const receipts = await this.getReceipts(pubKey);
+    const messageIds = receipts.map(receipt => {
+      return receipt.messageId;
     });
-    const transactions = (await this.iota.getTransactionObjects(transactionHashes)).sort((a, b) => {
-      return a.timestamp > b.timestamp;
-    });
-    const hashes = transactions.map(transaction => {
-      return transaction.hash;
-    });
-    const bundles = [];
-    for (const hash of hashes) {
-      let bundle;
-      let json;
-      if (hash in this.cache.hashToBundle) {
-        json = this.cache.hashToBundle[hash];
+    let messages = [];
+    for (const messageId of messageIds) {
+      let message;
+      if (messageId in this.cache.messages) {
+        message = this.cache.messages[messageId];
       } else {
-        const bundle = await this.iota.getBundle(hash);
-        try {
-          json = JSON.parse(Extract.extractJson(bundle));
-        } catch(err) {
-          continue;
-        }
+        message = await this.getMessage(messageId);
       }
-      this.cache.hashToBundle[hash] = json;
-      bundles.push(json);
+      this.cache.messages[messageId] = message;
+      messages.push(message);
     }
     for (let i = 0; i < receipts.length; i++) {
       const to = receipts[i].certHolder;
-      const title = bundles[i].title;
-      const description = bundles[i].description;
-      const ipfs = bundles[i].ipfs;
-      bundles[i].to = to;
+      messages[i].to = to;
     }
     if (update) {
-      update(bundles);
+      update(messages);
     }
-    return bundles;
+    return messages;
   }
-  async getImageUrl(address, index) {
-    const certificates = await this.getCertificates(address);
+  async getImageUrl(pubKey, index) {
+    const certificates = await this.getCertificates(pubKey);
     let imageUrl;
     try {
       imageUrl = await this.ipfsClient.getImageOnIpfs(certificates[index].ipfs);
@@ -325,8 +290,8 @@ class CertClient {
     certificates[index].imageUrl = imageUrl;
     return certificates;
   }
-  async getTitle(address, index) {
-    const certificates = await this.getCertificates(address);
+  async getTitle(pubKey, index) {
+    const certificates = await this.getCertificates(pubKey);
     let title;
     try {
       title = await this.ipfsClient.getTextOnIpfs(certificates[index].title);
@@ -337,8 +302,8 @@ class CertClient {
     certificates[index].titleInIpfs = title;
     return certificates;
   }
-  async getDescription(address, index) {
-    const certificates = await this.getCertificates(address);
+  async getDescription(pubKey, index) {
+    const certificates = await this.getCertificates(pubKey);
     let description;
     try {
       description = await this.ipfsClient.getTextOnIpfs(certificates[index].description);
@@ -349,8 +314,8 @@ class CertClient {
     certificates[index].descriptionInIpfs = description;
     return certificates;
   }
-  async getImageUrlIIssued(address, index) {
-    const certificates = await this.getCertificatesIIssued(address);
+  async getImageUrlIIssued(pubKey, index) {
+    const certificates = await this.getCertificatesIIssued(pubKey);
     let imageUrl;
     try {
       imageUrl = await this.ipfsClient.getImageOnIpfs(certificates[index].ipfs);
@@ -361,8 +326,8 @@ class CertClient {
     certificates[index].imageUrl = imageUrl;
     return certificates;
   }
-  async getTitleIIssued(address, index) {
-    const certificates = await this.getCertificatesIIssued(address);
+  async getTitleIIssued(pubKey, index) {
+    const certificates = await this.getCertificatesIIssued(pubKey);
     let title;
     try {
       title = await this.ipfsClient.getTextOnIpfs(certificates[index].title);
@@ -373,8 +338,8 @@ class CertClient {
     certificates[index].titleInIpfs = title;
     return certificates;
   }
-  async getDescriptionIIssued(address, index) {
-    const certificates = await this.getCertificatesIIssued(address);
+  async getDescriptionIIssued(pubKey, index) {
+    const certificates = await this.getCertificatesIIssued(pubKey);
     let description;
     try {
       description = await this.ipfsClient.getTextOnIpfs(certificates[index].description);
@@ -385,14 +350,14 @@ class CertClient {
     certificates[index].descriptionInIpfs = description;
     return certificates;
   }
-  async getCertificates(address, update) {
+  async getCertificates(pubKey, update) {
     if (!address) {
-      address = this.address;
+      pubKey = this.rsaKeyPair.pubKey;
     }
-    const bundles = await this.getBundles(address);
+    const messages = await this.getMessages(pubKey);
     const that = this;
-    const certificates = bundles.filter(bundle => {
-      return that.isCertObject(bundle);
+    const certificates = messages.filter(message => {
+      return that.isCertObject(message);
     });
     const validCertificates = [];
     for (const certificate of certificates) {
@@ -422,7 +387,7 @@ class CertClient {
       }
       validCertificates.push(certificate);
     }
-    this.cache.certificates[address] = validCertificates;
+    this.cache.certificates[pubKey] = validCertificates;
     if (update) {
       update(validCertificates);
     }
