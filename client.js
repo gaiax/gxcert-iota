@@ -1,6 +1,4 @@
-const { SingleNodeClient } = require("@iota/iota.js");
-const Extract = require("@iota/extract-json");
-const Converter = require("@iota/converter");
+const { SingleNodeClient, Converter, retrieveData } = require("@iota/iota.js");
 const { getSeed } = require("./seed");
 const { getKeyPair } = require("./rsa");
 const cryptico = require("cryptico");
@@ -51,11 +49,35 @@ class CertClient {
     return this.verify(text, certificate.sig, profile.pubkey);
   }
   async sendMessage(obj, to) {
-    
+    const index = "gxcert:" + pubKey;
+    const indexBytes = Converter.utf8ToBytes(index);
+    const body = JSON.stringify(obj);
+    const bodyBytes = Converter.utf8ToBytes(body);
+    const result = await sendData(this.iotaClient, indexBytes, bodyBytes);
+    return result.messageId;
   }
   async getMessages(pubKey) {
+    const client = this.iotaClient;
     const index = "gxcert:" + pubKey;
-
+    const indexBytes = Converter.utf8ToBytes(index);
+    const found = await client.messagesFind(indexBytes);
+    const messageIds = found.messageIds;
+    const messages = [];
+    for (const messageId of messageIds) {
+      let message;
+      if (messageId in this.cache.messages) {
+        message = this.cache.messages[messageId];
+      } else {
+        message = await retrieveData(client, messageId);
+      }
+      if (message && message.data) {
+        const data = Converter.bytesToUtf8(message.data);
+        messages.push(data);
+        this.cache.messages[messageId] = message;
+      }
+    }
+    messages.sort((a, b) => a.time > b.time);
+    return messages;
   }
   async registerName(name) {
     const ipfsHash = await this.ipfsClient.postResource(name);
@@ -169,49 +191,6 @@ class CertClient {
   verify(text, signature, pubKey) {
     const key = cryptico.publicKeyFromString(pubKey);
     return key.verifyString(text, signature);
-  }
-  async getBundles(address) {
-    const transactions = (await this.iota.findTransactionObjects({ addresses: [address] })).sort((a, b) => {
-      return a.timestamp > b.timestamp;
-    });
-    const hashes = transactions.map(transaction => {
-      return transaction.hash;
-    });
-    let bundles = [];
-    for (const hash of hashes) {
-      let json;
-      if (hash in this.cache.hashToBundle) {
-        json = this.cache.hashToBundle[hash];
-      } else {
-        try {
-          const bundle = await this.iota.getBundle(hash);
-          json = JSON.parse(Extract.extractJson(bundle));
-        } catch(err) {
-          console.error(err);
-          continue;
-        }
-      }
-      console.log("get bundle");
-      this.cache.hashToBundle[hash] = json;
-      bundles.push(json);
-    }
-    this.cache.bundles[address] = bundles;
-    return bundles;
-  }
-  async sendTransaction(messageObject, to) {
-    const messageString = JSON.stringify(messageObject);
-    const messageInTrytes = Converter.asciiToTrytes(messageString);
-    const transfers = [
-      {
-        value: 0,
-        address: to,
-        message: messageInTrytes,
-      }
-    ]
-    const trytes = await this.iota.prepareTransfers(this.seed, transfers);
-    const bundle = await this.iota.sendTrytes(trytes, depth, minimumWeightMagnitude);
-    const hash = bundle[0].hash;
-    return hash;
   }
   async issueCertificate(certObject, pubKey) {
     const messageId = await this.sendMessage(certObject, pubKey);
