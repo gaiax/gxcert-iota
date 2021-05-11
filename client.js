@@ -1,4 +1,5 @@
 const { sendData, SingleNodeClient, Converter, retrieveData } = require("@iota/iota.js");
+const { ClientBuilder } = require("@iota/client");
 const { getSeed } = require("./seed");
 const { getKeyPair } = require("./rsa");
 const crypto = require("crypto");
@@ -36,7 +37,7 @@ class CertClient {
       this.profile = await this.getProfile(this.address);
     } catch(err) {
       console.error(err);
-      this.registerPubKey(this.rsaKeyPair.pubKey);
+      await this.registerPubKey(this.rsaKeyPair.pubKey);
     }
   }
   async verifyPubKey(pubKey) {
@@ -50,19 +51,22 @@ class CertClient {
     const profile = await this.getProfile(certificate.by);
     return this.verify(text, certificate.sig, profile.pubkey);
   }
-  async sendMessage(obj, to) {
-    const index = "gxcert:" + to.slice(0, 48);
+  async sendMessage(obj, address) {
+    const index = "gxcert:" + address;
     const indexBytes = Converter.utf8ToBytes(index);
     const body = JSON.stringify(obj);
     const bodyBytes = Converter.utf8ToBytes(body);
-    const result = await sendData(this.iotaClient, indexBytes, bodyBytes);
-    return result.messageId;
+    const message = await sendData(this.iotaClient, indexBytes, bodyBytes);
+    console.log(message);
+    return message.messageId;
   }
   async getMessages(address) {
     const client = this.iotaClient;
     const index = "gxcert:" + address;
     const indexBytes = Converter.utf8ToBytes(index);
     const found = await client.messagesFind(indexBytes);
+    console.log("found");
+    console.log(found);
     const messageIds = found.messageIds;
     const messages = [];
     for (const messageId of messageIds) {
@@ -73,12 +77,17 @@ class CertClient {
         message = await retrieveData(client, messageId);
       }
       if (message && message.data) {
-        const data = Converter.bytesToUtf8(message.data);
-        messages.push(data);
+        try {
+          const data = JSON.parse(Converter.bytesToUtf8(message.data));
+          messages.push(data);
+        } catch(err) {
+          console.error(err);
+        }
         this.cache.messages[messageId] = message;
       }
     }
     messages.sort((a, b) => a.time > b.time);
+    console.log(messages);
     return messages;
   }
   async registerPubKey(pubKey) {
@@ -165,7 +174,7 @@ class CertClient {
     return time.toString() + ":" + title + ":" + description + ":" + ipfs + ":" + to;
   }
   isPubKeyObject(json) {
-    if (!json.pubkey || !json.time) {
+    if (!json.pubkey) {
       return false;
     }
     return true;
