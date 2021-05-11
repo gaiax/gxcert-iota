@@ -24,7 +24,9 @@ class CertClient {
     this.uid = uid;
     this.profile = null;
     this.ipfsClient = new IpfsClient("ipfs.infura.io");
-    this.address = crypto.createHash("sha256").update(uid, "utf8").digest("hex").slice(0, 48);
+    if (uid) {
+      this.address = crypto.createHash("sha256").update(uid, "utf8").digest("hex").slice(0, 48);
+    }
     this.cache = {
       certificates: {},
       profiles: {},
