@@ -11,7 +11,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@iota/client": "^0.4.0",
     "@iota/converter": "^1.0.0-beta.30",
     "@iota/core": "^1.0.0-beta.30",
     "@iota/extract-json": "^1.0.0-beta.30",

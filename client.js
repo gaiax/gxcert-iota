@@ -1,5 +1,4 @@
 const { sendData, SingleNodeClient, Converter, retrieveData } = require("@iota/iota.js");
-const { ClientBuilder } = require("@iota/client");
 const { getSeed } = require("./seed");
 const { getKeyPair } = require("./rsa");
 const crypto = require("crypto");
