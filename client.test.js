@@ -21,18 +21,6 @@ test("get first address by cert client", async() => {
   expect(addressA).not.toEqual(addressB);
 });
 
-test("verify address", async() => {
-  const passphraseA = generateRandomString(32);
-  const passphraseB = generateRandomString(32);
-  const clientA = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphraseA);
-  const clientB = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphraseB);
-  await clientA.init();
-  await clientB.init();
-  const verified = await clientA.verifyAddress(clientA.address);
-  expect(verified).toEqual(true);
-  const notVerified = !(await clientA.verifyAddress(clientB.address));
-  expect(notVerified).toEqual(true);
-});
 
 test("sign and verify", async() => {
   const passphraseA = generateRandomString(32);
@@ -60,6 +48,7 @@ test("post and get bundle", async () => {
   const client = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphrase);
   await client.init();
   await client.sendMessage({
+    time: Math.floor(new Date().getTime() / 1000),
     hello: "world"
   }, client.address);
   const messages = await client.getMessages(client.address);
@@ -196,12 +185,6 @@ test("register and get pubkey", async () => {
   await clientA.init();
   await clientB.init();
   let pubkey = (await clientA.getProfile(clientA.address)).pubkey;
-  expect(pubkey).toEqual(clientA.rsaKeyPair.pubKey);
-  const dummyPubKey = clientB.rsaKeyPair.pubKey;
-  await clientB.sendMessage({
-    "pubkey": dummyPubKey
-  }, clientA.address);
-  pubkey = (await clientA.getProfile(clientA.address)).pubkey;
   expect(pubkey).toEqual(clientA.rsaKeyPair.pubKey);
 });
 

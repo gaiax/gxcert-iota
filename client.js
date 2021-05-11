@@ -60,6 +60,26 @@ class CertClient {
     console.log(message);
     return message.messageId;
   }
+  async getMessage(messageId) {
+    const client = this.iotaClient;
+    let message;
+    if (messageId in this.cache.messages) {
+      message = this.cache.messages[messageId];
+    } else {
+      message = await retrieveData(client, messageId);
+    }
+    if (message && message.data) {
+      let data;
+      try {
+        data = JSON.parse(Converter.bytesToUtf8(message.data));
+      } catch(err) {
+        console.error(err);
+      }
+      this.cache.messages[messageId] = message;
+      return data;
+    }
+    throw new Error("The message not found.");
+  }
   async getMessages(address) {
     const client = this.iotaClient;
     const index = "gxcert:" + address;
@@ -86,7 +106,18 @@ class CertClient {
         this.cache.messages[messageId] = message;
       }
     }
-    messages.sort((a, b) => a.time > b.time);
+    messages.sort((a, b) => {
+      if (!a.time) {
+        return -1;
+      }
+      if (!b.time) {
+        return 1;
+      }
+      if (a.time > b.time) {
+        return 1;
+      }
+      return -1;
+    });
     console.log(messages);
     return messages;
   }
@@ -123,7 +154,7 @@ class CertClient {
     let profile = {};
     for (const message of messages) {
       if (this.isPubKeyObject(message)) {
-        profile.pubkey = bundle.pubkey;
+        profile.pubkey = message.pubkey;
         break;
       }
     }
@@ -198,7 +229,7 @@ class CertClient {
     return true;
   }
   isReceiptObject(json) {
-    if (!json.messageId || !json.certHolder || !json.time) {
+    if (!json.messageId || !json.certHolder) {
       return false;
     }
     return true;
@@ -357,7 +388,12 @@ class CertClient {
     const that = this;
     const certificates = messages.filter(message => {
       return that.isCertObject(message);
-    });
+    }).map((certificate, index) => {
+      if (address in this.cache.certificates && index < this.cache.certificates[address].length) {
+        return this.cache.certificates[address][index];  
+      }
+      return certificate;
+    });;
     const validCertificates = [];
     for (const certificate of certificates) {
       const by = certificate.by;
