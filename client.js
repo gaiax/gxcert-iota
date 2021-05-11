@@ -1,4 +1,4 @@
-const { SingleNodeClient, Converter, retrieveData } = require("@iota/iota.js");
+const { sendData, SingleNodeClient, Converter, retrieveData } = require("@iota/iota.js");
 const { getSeed } = require("./seed");
 const { getKeyPair } = require("./rsa");
 const cryptico = require("cryptico");
@@ -26,13 +26,12 @@ class CertClient {
     this.cache = {
       certificates: {},
       profiles: {},
-      bundles: {},
-      hashToBundle: {},
+      messages: {},
     }
   }
   async init() {
     try {
-      this.profile = await this.getProfile(this.address);
+      this.profile = await this.getProfile(this.rsaKeyPair.pubKey);
     } catch(err) {
       console.error(err);
     }
@@ -49,7 +48,7 @@ class CertClient {
     return this.verify(text, certificate.sig, profile.pubkey);
   }
   async sendMessage(obj, to) {
-    const index = "gxcert:" + pubKey;
+    const index = "gxcert:" + to.slice(0, 48);
     const indexBytes = Converter.utf8ToBytes(index);
     const body = JSON.stringify(obj);
     const bodyBytes = Converter.utf8ToBytes(body);
@@ -58,7 +57,7 @@ class CertClient {
   }
   async getMessages(pubKey) {
     const client = this.iotaClient;
-    const index = "gxcert:" + pubKey;
+    const index = "gxcert:" + pubKey.slice(0, 48);
     const indexBytes = Converter.utf8ToBytes(index);
     const found = await client.messagesFind(indexBytes);
     const messageIds = found.messageIds;
@@ -80,21 +79,25 @@ class CertClient {
     return messages;
   }
   async registerName(name) {
+    const time = Math.floor((new Date()).getTime() / 1000);
     const ipfsHash = await this.ipfsClient.postResource(name);
     const sig = this.sign(ipfsHash);
     return await this.sendMessage({
       "name": ipfsHash,
-      "sig": sig,
+      sig,
+      time,
     }, this.rsaKeyPair.pubKey);
   }
   async registerIcon(ipfsHash) {
     if (!ipfsHash) {
       throw new Error("The name must be 16 characters or less.");
     }
+    const time = Math.floor((new Date()).getTime() / 1000);
     const sig = this.sign(ipfsHash);
     return await this.sendMessage({
       "icon": ipfsHash,
-      "sig": sig,
+      sig,
+      time,
     }, this.rsaKeyPair.pubKey);
   }
   async getProfile(pubKey, update) {
@@ -330,7 +333,7 @@ class CertClient {
     return certificates;
   }
   async getCertificates(pubKey, update) {
-    if (!address) {
+    if (!pubKey) {
       pubKey = this.rsaKeyPair.pubKey;
     }
     const messages = await this.getMessages(pubKey);
