@@ -14,9 +14,9 @@ test("get first address by cert client", async() => {
   const clientC = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphraseA);
   await clientA.init();
   await clientB.init();
-  const addressA = clientA.rsaKeyPair.pubKey;
-  const addressB = clientB.rsaKeyPair.pubKey;
-  const addressC = clientC.rsaKeyPair.pubKey;
+  const addressA = clientA.address;
+  const addressB = clientB.address;
+  const addressC = clientC.address;
   expect(addressA).toEqual(addressC);
   expect(addressA).not.toEqual(addressB);
 });
@@ -28,9 +28,9 @@ test("verify address", async() => {
   const clientB = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphraseB);
   await clientA.init();
   await clientB.init();
-  const verified = await clientA.verifyAddress(clientA.rsaKeyPair.pubKey);
+  const verified = await clientA.verifyAddress(clientA.address);
   expect(verified).toEqual(true);
-  const notVerified = !(await clientA.verifyAddress(clientB.rsaKeyPair.pubKey));
+  const notVerified = !(await clientA.verifyAddress(clientB.address));
   expect(notVerified).toEqual(true);
 });
 
@@ -41,8 +41,8 @@ test("sign and verify", async() => {
   const clientB = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphraseB);
   await clientA.init();
   await clientB.init();
-  const signature = clientA.sign(clientB.rsaKeyPair.pubKey);
-  let verified = clientB.verify(clientB.rsaKeyPair.pubKey, signature, clientA.rsaKeyPair.pubKey);
+  const signature = clientA.sign(clientB.address);
+  let verified = clientB.verify(clientB.address, signature, clientA.rsaKeyPair.pubKey);
   expect(verified).toEqual(true);
   verified = clientB.verify("hello", signature, clientA.rsaKeyPair.pubKey);
   expect(verified).toEqual(false);
@@ -51,8 +51,8 @@ test("sign and verify", async() => {
 test("certificate text", () => {
   const passphrase = generateRandomString(32);
   const client = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphrase);
-  const text = client.certificateText("title", "description", "abcd", new Date(), client.rsaKeyPair.pubKey);
-  expect(text.endsWith("title:description:abcd:" + client.rsaKeyPair.pubKey) && text.length > 4).toEqual(true);
+  const text = client.certificateText("title", "description", "abcd", new Date(), client.address);
+  expect(text.endsWith("title:description:abcd:" + client.address) && text.length > 4).toEqual(true);
 });
 
 test("post and get bundle", async () => {
@@ -61,8 +61,8 @@ test("post and get bundle", async () => {
   await client.init();
   await client.sendMessage({
     hello: "world"
-  }, client.rsaKeyPair.pubKey);
-  const messages = await client.getMessages(client.rsaKeyPair.pubKey);
+  }, client.address);
+  const messages = await client.getMessages(client.address);
   expect(messages.length).toEqual(2);
   expect(messages[1].hello).toEqual("world");
 });
@@ -143,7 +143,7 @@ test("create certificate object", () => {
   const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
   const title = "title";
   const description = "description";
-  const certificate = clientA.createCertificateObject(title, description, ipfs, clientB.rsaKeyPair.pubKey);
+  const certificate = clientA.createCertificateObject(title, description, ipfs, clientB.address);
   expect(certificate.ipfs).toEqual(ipfs);
   expect(certificate.title).toEqual(title);
   expect(certificate.sig.length > 0).toEqual(true);
@@ -159,18 +159,18 @@ test("issue certificate", async () => {
   const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
   const title = await clientA.ipfsClient.postResource("title");
   const description = await clientA.ipfsClient.postResource("description");
-  const certificate = clientA.createCertificateObject(title, description, ipfs, clientB.rsaKeyPair.pubKey);
-  await clientA.issueCertificate(certificate, clientB.rsaKeyPair.pubKey);
-  const certificates = await clientB.getCertificates(clientB.rsaKeyPair.pubKey);
+  const certificate = clientA.createCertificateObject(title, description, ipfs, clientB.address);
+  await clientA.issueCertificate(certificate, clientB.address);
+  const certificates = await clientB.getCertificates(clientB.address);
   expect(certificates[0].title).toEqual(title);
   expect(certificates[0].ipfs).toEqual(ipfs);
   expect(certificates[0].time).not.toEqual(null);
   expect(certificates[0].time).not.toEqual(undefined);
   expect(certificates[0].sig.length > 0).toEqual(true);
-  expect(certificates[0].by).toEqual(clientA.rsaKeyPair.pubKey);
-  await clientB.getTitle(clientB.rsaKeyPair.pubKey, 0);
+  expect(certificates[0].by).toEqual(clientA.address);
+  await clientB.getTitle(clientB.address, 0);
   expect(certificates[0].titleInIpfs).toEqual("title");
-  await clientB.getDescription(clientB.rsaKeyPair.pubKey, 0);
+  await clientB.getDescription(clientB.address, 0);
   expect(certificates[0].descriptionInIpfs).toEqual("description");
   const receipts = await clientA.getReceipts();
   console.log(receipts);
@@ -181,10 +181,10 @@ test("issue certificate", async () => {
   expect(certificatesIIssued[0].time).toEqual(certificates[0].time);
   expect(certificatesIIssued[0].sig).toEqual(certificates[0].sig);
   expect(certificatesIIssued[0].by).toEqual(certificates[0].by);
-  expect(certificatesIIssued[0].to).toEqual(clientB.rsaKeyPair.pubKey);
-  await clientA.getTitleIIssued(clientA.rsaKeyPair.pubKey, 0);
+  expect(certificatesIIssued[0].to).toEqual(clientB.address);
+  await clientA.getTitleIIssued(clientA.address, 0);
   expect(certificatesIIssued[0].titleInIpfs).toEqual("title");
-  await clientA.getDescriptionIIssued(clientA.rsaKeyPair.pubKey, 0);
+  await clientA.getDescriptionIIssued(clientA.address, 0);
   expect(certificatesIIssued[0].descriptionInIpfs).toEqual("description");
 });
 
@@ -195,12 +195,12 @@ test("register and get pubkey", async () => {
   const clientB = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphraseB);
   await clientA.init();
   await clientB.init();
-  let pubkey = (await clientA.getProfile(clientA.rsaKeyPair.pubKey)).pubkey;
+  let pubkey = (await clientA.getProfile(clientA.address)).pubkey;
   expect(pubkey).toEqual(clientA.rsaKeyPair.pubKey);
   const dummyPubKey = clientB.rsaKeyPair.pubKey;
   await clientB.sendMessage({
     "pubkey": dummyPubKey
-  }, clientA.rsaKeyPair.pubKey);
+  }, clientA.address);
   pubkey = (await clientA.getProfile(clientA.address)).pubkey;
   expect(pubkey).toEqual(clientA.rsaKeyPair.pubKey);
 });
@@ -229,14 +229,14 @@ test("verify certificate", async () => {
   const ipfs = "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o";
   const title = "title";
   const description = "description";
-  let certificate = clientA.createCertificateObject(title, description, ipfs, clientB.rsaKeyPair.pubKey);
-  let verified = await clientB.verifyCertificate(certificate, clientB.rsaKeyPair.pubKey);
+  let certificate = clientA.createCertificateObject(title, description, ipfs, clientB.address);
+  let verified = await clientB.verifyCertificate(certificate, clientB.address);
   expect(verified).toEqual(true);
-  verified = await clientB.verifyCertificate(certificate, clientA.rsaKeyPair.pubKey);
+  verified = await clientB.verifyCertificate(certificate, clientA.address);
   expect(verified).toEqual(false);
-  certificate = clientA.createCertificateObject(title, ipfs, clientB.rsaKeyPair.pubKey);
+  certificate = clientA.createCertificateObject(title, ipfs, clientB.address);
   certificate.title = "dummy";
-  verified = await clientB.verifyCertificate(certificate, clientB.rsaKeyPair.pubKey);
+  verified = await clientB.verifyCertificate(certificate, clientB.address);
   expect(verified).toEqual(false);
 });
 
