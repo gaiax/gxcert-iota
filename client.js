@@ -115,7 +115,7 @@ class CertClient {
         try {
           const data = JSON.parse(Converter.bytesToUtf8(message.data));
           if (timestamp) {
-            data.timestamp = timestamp;
+            data.time = timestamp;
           }
           messages.push(data);
         } catch(err) {
@@ -125,13 +125,13 @@ class CertClient {
       }
     }
     messages.sort((a, b) => {
-      if (!a.timestamp) {
+      if (!a.time) {
         return -1;
       }
-      if (!b.timestamp) {
+      if (!b.time) {
         return 1;
       }
-      if (a.timestamp > b.timestamp) {
+      if (a.time > b.time) {
         return 1;
       }
       return -1;
