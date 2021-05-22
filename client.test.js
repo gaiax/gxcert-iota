@@ -5,6 +5,13 @@ const {randomBytes} = require('crypto')
 function generateRandomString(length) {
   return randomBytes(length).reduce((p, i) => p + (i % 36).toString(36), '')
 }
+function wait() {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve();
+    }, 180 * 1000);
+  });
+}
 
 test("get first address by cert client", async() => {
   const passphraseA = generateRandomString(32);
@@ -51,6 +58,7 @@ test("post and get bundle", async () => {
     time: Math.floor(new Date().getTime() / 1000),
     hello: "world"
   }, client.address);
+  await wait();
   const messages = await client.getMessages(client.address);
   expect(messages.length).toEqual(2);
   expect(messages[1].hello).toEqual("world");
@@ -150,6 +158,7 @@ test("issue certificate", async () => {
   const description = await clientA.ipfsClient.postResource("description");
   const certificate = clientA.createCertificateObject(title, description, ipfs, clientB.address);
   await clientA.issueCertificate(certificate, clientB.address);
+  await wait();
   const certificates = await clientB.getCertificates(clientB.address);
   expect(certificates[0].title).toEqual(title);
   expect(certificates[0].ipfs).toEqual(ipfs);
@@ -196,6 +205,7 @@ test("register name and icon", async () => {
   await client.registerName("Alice2");
   await client.registerIcon("Image1");
   await client.registerIcon("Image2");
+  await wait();
   const profile = await client.getProfile(client.address);
   expect(profile.name).toEqual("QmTddebgzpxB91Wz3epcnFHs4eKyv24AFnUqJgy4ntvHJE"); //Alice2
   expect(profile.icon).toEqual("Image2");

@@ -97,9 +97,19 @@ class CertClient {
       } else {
         message = await retrieveData(client, messageId);
       }
+      const metadata = await this.iotaClient.messageMetadata(messageId);
+      let timestamp;
+      if (metadata.referencedByMilestoneIndex) {
+        const milestone = await this.iotaClient.milestone(metadata.referencedByMilestoneIndex);
+        console.log(milestone);
+        timestamp = milestone.timestamp;
+      }
       if (message && message.data) {
         try {
           const data = JSON.parse(Converter.bytesToUtf8(message.data));
+          if (timestamp) {
+            data.timestamp = timestamp;
+          }
           messages.push(data);
         } catch(err) {
           console.error(err);
@@ -108,13 +118,13 @@ class CertClient {
       }
     }
     messages.sort((a, b) => {
-      if (!a.time) {
+      if (!a.timestamp) {
         return -1;
       }
-      if (!b.time) {
+      if (!b.timestamp) {
         return 1;
       }
-      if (a.time > b.time) {
+      if (a.timestamp > b.timestamp) {
         return 1;
       }
       return -1;
