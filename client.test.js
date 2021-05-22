@@ -54,6 +54,7 @@ test("post and get bundle", async () => {
   const passphrase = generateRandomString(32);
   const client = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphrase);
   await client.init();
+  await wait();
   await client.sendMessage({
     time: Math.floor(new Date().getTime() / 1000),
     hello: "world"
@@ -202,8 +203,11 @@ test("register name and icon", async () => {
   const client = new CertClient("https://api.lb-0.testnet.chrysalis2.com", passphrase);
   await client.init();
   await client.registerName("Alice1");
+  await wait();
   await client.registerName("Alice2");
+  await wait();
   await client.registerIcon("Image1");
+  await wait();
   await client.registerIcon("Image2");
   await wait();
   const profile = await client.getProfile(client.address);
