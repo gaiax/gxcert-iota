@@ -31,6 +31,7 @@ class CertClient {
       certificates: {},
       profiles: {},
       messages: {},
+      milestones: {},
     }
   }
   async init() {
@@ -100,8 +101,14 @@ class CertClient {
       const metadata = await this.iotaClient.messageMetadata(messageId);
       let timestamp;
       if (metadata.referencedByMilestoneIndex) {
-        const milestone = await this.iotaClient.milestone(metadata.referencedByMilestoneIndex);
-        console.log(milestone);
+        const index = metadata.referencedByMilestoneIndex;
+        let milestone;
+        if (index.toString() in this.cache.milestones) {
+          milestone = this.cache.milestones[index.toString()];
+        } else {
+          milestone = await this.iotaClient.milestone(metadata.referencedByMilestoneIndex);
+        }
+        this.cache.milestones[index.toString()] = milestone;
         timestamp = milestone.timestamp;
       }
       if (message && message.data) {
