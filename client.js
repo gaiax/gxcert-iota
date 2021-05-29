@@ -126,15 +126,12 @@ class CertClient {
     }
     messages.sort((a, b) => {
       if (!a.timestamp) {
-        return -1;
+        return 1;
       }
       if (!b.timestamp) {
-        return 1;
+        return 0;
       }
-      if (a.timestamp > b.timestamp) {
-        return 1;
-      }
-      return -1;
+      return a.timestamp - b.timestamp;
     });
     console.log(messages);
     return messages;
